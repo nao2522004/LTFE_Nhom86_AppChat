@@ -1,0 +1,71 @@
+.profileContainer {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.avatarSection {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.onlineIndicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    border: 3px solid white;
+    border-radius: 50%;
+}
+
+.infoSection {
+    text-align: center;
+}
+
+.displayName {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.username {
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.email {
+    color: #888;
+    font-size: 14px;
+}
+
+.bioSection {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.editButton {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.editButton:hover {
+    background: #0056b3;
+}
