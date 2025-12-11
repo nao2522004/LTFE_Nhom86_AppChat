@@ -3,13 +3,13 @@ import { useAppSelector } from '../../hooks/hooks';
 import styles from './SocketIndicator.module.css';
 
 const SocketIndicator: React.FC = () => {
-    const { socketConnected } = useAppSelector((state) => state.auth);
+    const { wsConnected } = useAppSelector((state) => state.auth);
 
     return (
-        <div className={`${styles.indicator} ${socketConnected ? styles.connected : styles.disconnected}`}>
+        <div className={`${styles.indicator} ${wsConnected ? styles.connected : styles.disconnected}`}>
             <span className={styles.dot} />
             <span className={styles.text}>
-                {socketConnected ? 'Đã kết nối' : 'Đang kết nối...'}
+                {wsConnected ? 'WebSocket Connected' : 'WebSocket Disconnected'}
             </span>
         </div>
     );

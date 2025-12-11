@@ -6,20 +6,14 @@ import styles from './AuthForm.module.css';
 
 const LoginForm: React.FC = () => {
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        user: '',
+        pass: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/chat');
-        }
-    }, [isAuthenticated, navigate]);
 
     useEffect(() => {
         return () => {
@@ -37,7 +31,7 @@ const LoginForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.email || !formData.password) {
+        if (!formData.user || !formData.pass) {
             return;
         }
 
@@ -58,34 +52,34 @@ const LoginForm: React.FC = () => {
 
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGroup}>
-                        <label htmlFor="email" className={styles.label}>
-                            Email
+                        <label htmlFor="user" className={styles.label}>
+                            Username
                         </label>
                         <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={formData.email}
+                            type="text"
+                            id="user"
+                            name="user"
+                            value={formData.user}
                             onChange={handleChange}
                             className={styles.input}
-                            placeholder="Nhập email của bạn"
+                            placeholder="Nhập username của bạn (vd: long)"
                             required
                         />
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="password" className={styles.label}>
+                        <label htmlFor="pass" className={styles.label}>
                             Mật khẩu
                         </label>
                         <div className={styles.passwordInput}>
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                id="password"
-                                name="password"
-                                value={formData.password}
+                                id="pass"
+                                name="pass"
+                                value={formData.pass}
                                 onChange={handleChange}
                                 className={styles.input}
-                                placeholder="Nhập mật khẩu"
+                                placeholder="Nhập mật khẩu (vd: 12345)"
                                 required
                             />
                             <button
@@ -108,6 +102,9 @@ const LoginForm: React.FC = () => {
                 </form>
 
                 <div className={styles.footer}>
+                    <p style={{ fontSize: '13px', color: '#666', marginTop: '20px' }}>
+                        💡 Hint: Username: <strong>long</strong>, Password: <strong>12345</strong>
+                    </p>
                     <p>
                         Chưa có tài khoản?{' '}
                         <button

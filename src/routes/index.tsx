@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks/hooks';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
+import WebSocketTestPage from '../pages/WebSocketTestPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -20,7 +21,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     
     if (isAuthenticated) {
-        return <Navigate to="/chat" replace />;
+        return <Navigate to="/websocket-test" replace />;
     }
     
     return <>{children}</>;
@@ -49,6 +50,14 @@ const AppRoutes: React.FC = () => {
                 />
 
                 {/* Protected Routes */}
+                <Route
+                    path="/websocket-test"
+                    element={
+                        <ProtectedRoute>
+                            <WebSocketTestPage />
+                        </ProtectedRoute>
+                    }
+                />
 
                 {/* Default Route */}
                 <Route path="/" element={<Navigate to="/chat" replace />} />
