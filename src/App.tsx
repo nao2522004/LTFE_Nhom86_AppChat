@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
 import AppRoutes from './routes';
 import { useAppDispatch, useAppSelector } from './hooks/hooks';
-import { getCurrentUser, updateUserStatus } from './features/auth/authSlice';
-import socketService from './services/socket';
+import { getCurrentUser, updateUserStatus, setWsConnected } from './features/auth/authSlice';
+import websocketService from './services/websocket';
 
 function App() {
     const dispatch = useAppDispatch();
     const { token, isAuthenticated } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
-        // If having token, connect socket and get user
+        // If having token, connect WebSocket and get user
         if (token && !isAuthenticated) {
             dispatch(getCurrentUser());
         }
@@ -17,7 +17,17 @@ function App() {
 
     useEffect(() => {
         if (isAuthenticated && token) {
-            // socket global
+            // Setup WebSocket event handlers
+            const handleOpen = (data: any) => {
+                console.log('WebSocket connected in App');
+                dispatch(setWsConnected(true));
+            };
+
+            const handleClose = (data: any) => {
+                console.log('WebSocket disconnected in App');
+                dispatch(setWsConnected(false));
+            };
+
             const handleUserOnline = (data: { userId: string }) => {
                 dispatch(updateUserStatus({ userId: data.userId, isOnline: true }));
             };
@@ -27,18 +37,23 @@ function App() {
             };
 
             const handleError = (error: any) => {
-                console.error('Socket error:', error);
+                console.error('WebSocket error:', error);
             };
 
-            socketService.onUserOnline(handleUserOnline);
-            socketService.onUserOffline(handleUserOffline);
-            socketService.on('error', handleError);
+            // Register handlers
+            websocketService.on('open', handleOpen);
+            websocketService.on('close', handleClose);
+            websocketService.on('USER_ONLINE', handleUserOnline);
+            websocketService.on('USER_OFFLINE', handleUserOffline);
+            websocketService.on('error', handleError);
 
             // Cleanup
             return () => {
-                socketService.off('user:online', handleUserOnline);
-                socketService.off('user:offline', handleUserOffline);
-                socketService.off('error', handleError);
+                websocketService.off('open', handleOpen);
+                websocketService.off('close', handleClose);
+                websocketService.off('USER_ONLINE', handleUserOnline);
+                websocketService.off('USER_OFFLINE', handleUserOffline);
+                websocketService.off('error', handleError);
             };
         }
     }, [isAuthenticated, token, dispatch]);

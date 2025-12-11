@@ -21,7 +21,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     
     if (isAuthenticated) {
-        return <Navigate to="/chat" replace />;
+        return <Navigate to="/websocket-test" replace />;
     }
     
     return <>{children}</>;

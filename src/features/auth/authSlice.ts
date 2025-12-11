@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import socketService from '../../services/socket';
+import websocketService from '../../services/websocket';
 import { User } from '../../types/user';
 
 interface AuthState {
@@ -8,116 +8,117 @@ interface AuthState {
     isAuthenticated: boolean;
     loading: boolean;
     error: string | null;
-    socketConnected: boolean;
+    wsConnected: boolean;
 }
 
 const initialState: AuthState = {
     user: null,
     token: localStorage.getItem('token'),
-    isAuthenticated: !!localStorage.getItem('token'),
+    isAuthenticated: false,
     loading: false,
     error: null,
-    socketConnected: false
+    wsConnected: false
 };
 
-// Async thunks sử dụng Socket.IO
+// Login thunk
 export const login = createAsyncThunk(
     'auth/login',
-    async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    async (credentials: { user: string; pass: string }, { rejectWithValue }) => {
         try {
-            socketService.connect();
+            // Connect WebSocket first
+            websocketService.connect();
             
-            const response = await socketService.login(credentials);
+            // Wait a bit for connection to establish
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            if (response.success) {
+            // Send login request
+            const response = await websocketService.login(credentials);
+            
+            // Save to localStorage
+            if (response.token) {
                 localStorage.setItem('token', response.token);
-                localStorage.setItem('user', JSON.stringify(response.user));
-                
-                socketService.disconnect();
-                socketService.connect(response.token);
-                
-                return response;
-            } else {
-                throw new Error(response.message || 'Đăng nhập thất bại');
             }
+            if (response.user) {
+                localStorage.setItem('user', JSON.stringify(response.user));
+            }
+            
+            return response;
         } catch (error: any) {
-            return rejectWithValue(
-                error.message || 'Đăng nhập thất bại'
-            );
+            return rejectWithValue(error.message || 'Đăng nhập thất bại');
         }
     }
 );
 
+// Register thunk
 export const register = createAsyncThunk(
     'auth/register',
     async (
-        userData: { username: string; email: string; password: string; displayName?: string },
+        userData: { user: string; pass: string; name?: string },
         { rejectWithValue }
     ) => {
         try {
-            socketService.connect();
+            // Connect WebSocket first
+            websocketService.connect();
             
-            const response = await socketService.register(userData);
+            // Wait a bit for connection to establish
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            if (response.success) {
+            // Send register request
+            const response = await websocketService.register(userData);
+            
+            // Save to localStorage
+            if (response.token) {
                 localStorage.setItem('token', response.token);
-                localStorage.setItem('user', JSON.stringify(response.user));
-                
-                socketService.disconnect();
-                socketService.connect(response.token);
-                
-                return response;
-            } else {
-                throw new Error(response.message || 'Đăng ký thất bại');
             }
+            if (response.user) {
+                localStorage.setItem('user', JSON.stringify(response.user));
+            }
+            
+            return response;
         } catch (error: any) {
-            return rejectWithValue(
-                error.message || 'Đăng ký thất bại'
-            );
+            return rejectWithValue(error.message || 'Đăng ký thất bại');
         }
     }
 );
 
+// Logout thunk
 export const logout = createAsyncThunk(
     'auth/logout',
     async (_, { rejectWithValue }) => {
         try {
-            await socketService.logout();
+            await websocketService.logout();
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            socketService.disconnect();
         } catch (error: any) {
+            // Still clear local data even if logout fails
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            socketService.disconnect();
-            return rejectWithValue(
-                error.message || 'Đăng xuất thất bại'
-            );
+            websocketService.disconnect();
+            return rejectWithValue(error.message || 'Đăng xuất thất bại');
         }
     }
 );
 
+// Get current user thunk
 export const getCurrentUser = createAsyncThunk(
     'auth/getCurrentUser',
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No token found');
+            const userStr = localStorage.getItem('user');
+            
+            if (!token || !userStr) {
+                throw new Error('No token or user found');
             }
             
-            socketService.connect(token);
-            const response = await socketService.getCurrentUser();
+            const user = JSON.parse(userStr);
             
-            if (response.success) {
-                return response;
-            } else {
-                throw new Error(response.message || 'Không thể lấy thông tin người dùng');
-            }
+            // Connect WebSocket
+            websocketService.connect();
+            
+            return { user, token };
         } catch (error: any) {
-            return rejectWithValue(
-                error.message || 'Không thể lấy thông tin người dùng'
-            );
+            return rejectWithValue(error.message || 'Không thể lấy thông tin người dùng');
         }
     }
 );
@@ -135,13 +136,13 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.loading = false;
             state.error = null;
-            state.socketConnected = false;
+            state.wsConnected = false;
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            socketService.disconnect();
+            websocketService.disconnect();
         },
-        setSocketConnected: (state, action: PayloadAction<boolean>) => {
-            state.socketConnected = action.payload;
+        setWsConnected: (state, action: PayloadAction<boolean>) => {
+            state.wsConnected = action.payload;
         },
         updateUserStatus: (state, action: PayloadAction<{ userId: string; isOnline: boolean }>) => {
             if (state.user && state.user.id === action.payload.userId) {
@@ -162,12 +163,12 @@ const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.error = null;
-                state.socketConnected = true;
+                state.wsConnected = true;
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.socketConnected = false;
+                state.wsConnected = false;
             });
 
         // Register
@@ -182,12 +183,12 @@ const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.error = null;
-                state.socketConnected = true;
+                state.wsConnected = true;
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.socketConnected = false;
+                state.wsConnected = false;
             });
 
         // Logout
@@ -201,14 +202,14 @@ const authSlice = createSlice({
                 state.token = null;
                 state.isAuthenticated = false;
                 state.error = null;
-                state.socketConnected = false;
+                state.wsConnected = false;
             })
             .addCase(logout.rejected, (state, action) => {
                 state.loading = false;
                 state.user = null;
                 state.token = null;
                 state.isAuthenticated = false;
-                state.socketConnected = false;
+                state.wsConnected = false;
                 state.error = action.payload as string;
             });
 
@@ -220,18 +221,19 @@ const authSlice = createSlice({
             .addCase(getCurrentUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload.user;
+                state.token = action.payload.token;
                 state.isAuthenticated = true;
-                state.socketConnected = true;
+                state.wsConnected = true;
             })
             .addCase(getCurrentUser.rejected, (state) => {
                 state.loading = false;
                 state.isAuthenticated = false;
                 state.user = null;
                 state.token = null;
-                state.socketConnected = false;
+                state.wsConnected = false;
             });
     }
 });
 
-export const { clearError, resetAuth, setSocketConnected, updateUserStatus } = authSlice.actions;
+export const { clearError, resetAuth, setWsConnected, updateUserStatus } = authSlice.actions;
 export default authSlice.reducer;

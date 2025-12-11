@@ -1,21 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import socketService from '../../services/socket';
+import websocketService from '../../services/websocket';
 import { useAppSelector } from '../../hooks/hooks';
 
 interface ConnectionLog {
     timestamp: string;
-    event: 'connect' | 'disconnect' | 'error' | 'mount' | 'unmount';
+    event: 'connect' | 'disconnect' | 'error' | 'mount' | 'unmount' | 'message';
     message: string;
 }
 
 const WebSocketTest: React.FC = () => {
     const [logs, setLogs] = useState<ConnectionLog[]>([]);
-    const [isManuallyDisconnected, setIsManuallyDisconnected] = useState(false);
     const mountCountRef = useRef(0);
     const connectCountRef = useRef(0);
     const disconnectCountRef = useRef(0);
     
-    const { token, isAuthenticated, socketConnected } = useAppSelector((state) => state.auth);
+    const { isAuthenticated, wsConnected } = useAppSelector((state) => state.auth);
 
     const addLog = (event: ConnectionLog['event'], message: string) => {
         const timestamp = new Date().toLocaleTimeString('vi-VN', { 
@@ -33,70 +32,83 @@ const WebSocketTest: React.FC = () => {
         mountCountRef.current += 1;
         addLog('mount', `Component mounted (Lần ${mountCountRef.current})`);
 
-        if (!isAuthenticated || !token) {
-            addLog('error', 'Chưa đăng nhập - không thể kết nối socket');
+        if (!isAuthenticated) {
+            addLog('error', 'Chưa đăng nhập - chưa kết nối WebSocket');
             return;
         }
 
-        // Setup socket connection
-        const socket = socketService.connect(token);
+        // Connect WebSocket
+        websocketService.connect();
 
-        // onOpen equivalent (connect event)
-        const handleConnect = () => {
+        // onOpen handler
+        const handleOpen = (data: any) => {
             connectCountRef.current += 1;
-            addLog('connect', `✅ Socket CONNECTED - Socket ID: ${socket.id} (Lần ${connectCountRef.current})`);
+            addLog('connect', `✅ WebSocket CONNECTED (Lần ${connectCountRef.current})`);
         };
 
-        // onClose equivalent (disconnect event)
-        const handleDisconnect = (reason: string) => {
+        // onClose handler
+        const handleClose = (data: any) => {
             disconnectCountRef.current += 1;
-            addLog('disconnect', `❌ Socket DISCONNECTED - Lý do: ${reason} (Lần ${disconnectCountRef.current})`);
+            addLog('disconnect', `❌ WebSocket DISCONNECTED - Code: ${data.code}, Reason: ${data.reason || 'N/A'} (Lần ${disconnectCountRef.current})`);
         };
 
-        const handleConnectError = (error: any) => {
-            addLog('error', `⚠️ Connection Error: ${error.message}`);
-        };
-
+        // onError handler
         const handleError = (error: any) => {
-            addLog('error', `⚠️ Socket Error: ${error}`);
+            addLog('error', `⚠️ WebSocket Error: ${error.message || 'Unknown error'}`);
+        };
+
+        // onMessage handler (general)
+        const handleMessage = (message: any) => {
+            addLog('message', `📨 Received: ${JSON.stringify(message).substring(0, 100)}...`);
         };
 
         // Register event listeners
-        socket.on('connect', handleConnect);
-        socket.on('disconnect', handleDisconnect);
-        socket.on('connect_error', handleConnectError);
-        socket.on('error', handleError);
+        websocketService.on('open', handleOpen);
+        websocketService.on('close', handleClose);
+        websocketService.on('error', handleError);
+        websocketService.on('message', handleMessage);
 
         // Check if already connected
-        if (socket.connected) {
+        if (websocketService.isConnected()) {
             connectCountRef.current += 1;
-            addLog('connect', `✅ Socket đã CONNECTED - Socket ID: ${socket.id} (Lần ${connectCountRef.current})`);
+            addLog('connect', `✅ WebSocket đã CONNECTED (Lần ${connectCountRef.current})`);
         }
 
         // Cleanup function (unmount)
         return () => {
             addLog('unmount', `Component unmounting (Mount count: ${mountCountRef.current})`);
             
-            socket.off('connect', handleConnect);
-            socket.off('disconnect', handleDisconnect);
-            socket.off('connect_error', handleConnectError);
-            socket.off('error', handleError);
+            websocketService.off('open', handleOpen);
+            websocketService.off('close', handleClose);
+            websocketService.off('error', handleError);
+            websocketService.off('message', handleMessage);
             
-            // Note: We don't disconnect here to maintain connection across component unmounts
+            // Note: We don't disconnect here to maintain connection
         };
-    }, [token, isAuthenticated]);
+    }, [isAuthenticated]);
 
     const handleManualDisconnect = () => {
-        socketService.disconnect();
-        setIsManuallyDisconnected(true);
+        websocketService.disconnect();
         addLog('disconnect', '🔌 Manual disconnect triggered');
     };
 
     const handleManualConnect = () => {
-        if (token) {
-            socketService.connect(token);
-            setIsManuallyDisconnected(false);
-            addLog('connect', '🔌 Manual connect triggered');
+        websocketService.connect();
+        addLog('connect', '🔌 Manual connect triggered');
+    };
+
+    const handleTestMessage = async () => {
+        try {
+            await websocketService.send({
+                action: 'onchat',
+                data: {
+                    event: 'PING',
+                    data: { timestamp: Date.now() }
+                }
+            });
+            addLog('message', '📤 Sent PING message');
+        } catch (error: any) {
+            addLog('error', `❌ Failed to send: ${error.message}`);
         }
     };
 
@@ -116,6 +128,8 @@ const WebSocketTest: React.FC = () => {
                 return '#17a2b8';
             case 'unmount':
                 return '#6c757d';
+            case 'message':
+                return '#6f42c1';
             default:
                 return '#333';
         }
@@ -129,13 +143,17 @@ const WebSocketTest: React.FC = () => {
                     <div 
                         style={{
                             ...styles.statusDot,
-                            backgroundColor: socketConnected ? '#28a745' : '#dc3545'
+                            backgroundColor: wsConnected ? '#28a745' : '#dc3545'
                         }}
                     />
                     <span style={styles.statusText}>
-                        {socketConnected ? 'Connected' : 'Disconnected'}
+                        {wsConnected ? 'Connected' : 'Disconnected'}
                     </span>
                 </div>
+            </div>
+
+            <div style={styles.wsInfo}>
+                <strong>WebSocket URL:</strong> wss://chat.longapp.site/chat/chat
             </div>
 
             <div style={styles.stats}>
@@ -145,36 +163,47 @@ const WebSocketTest: React.FC = () => {
                 </div>
                 <div style={styles.statCard}>
                     <div style={styles.statValue}>{connectCountRef.current}</div>
-                    <div style={styles.statLabel}>Connect Events</div>
+                    <div style={styles.statLabel}>Connect Events (onOpen)</div>
                 </div>
                 <div style={styles.statCard}>
                     <div style={styles.statValue}>{disconnectCountRef.current}</div>
-                    <div style={styles.statLabel}>Disconnect Events</div>
+                    <div style={styles.statLabel}>Disconnect Events (onClose)</div>
                 </div>
             </div>
 
             <div style={styles.controls}>
                 <button
                     onClick={handleManualConnect}
-                    disabled={socketConnected || !token}
+                    disabled={wsConnected}
                     style={{
                         ...styles.button,
                         ...styles.connectButton,
-                        ...(socketConnected || !token ? styles.buttonDisabled : {})
+                        ...(wsConnected ? styles.buttonDisabled : {})
                     }}
                 >
                     🔌 Connect
                 </button>
                 <button
                     onClick={handleManualDisconnect}
-                    disabled={!socketConnected}
+                    disabled={!wsConnected}
                     style={{
                         ...styles.button,
                         ...styles.disconnectButton,
-                        ...(!socketConnected ? styles.buttonDisabled : {})
+                        ...(!wsConnected ? styles.buttonDisabled : {})
                     }}
                 >
                     🔌 Disconnect
+                </button>
+                <button
+                    onClick={handleTestMessage}
+                    disabled={!wsConnected}
+                    style={{
+                        ...styles.button,
+                        ...styles.testButton,
+                        ...(!wsConnected ? styles.buttonDisabled : {})
+                    }}
+                >
+                    📤 Send Test Message
                 </button>
                 <button
                     onClick={clearLogs}
@@ -227,11 +256,26 @@ const WebSocketTest: React.FC = () => {
                 <h4 style={styles.infoTitle}>ℹ️ Test Instructions:</h4>
                 <ul style={styles.infoList}>
                     <li>✅ Verify component chỉ mount 1 lần khi load trang</li>
-                    <li>✅ Verify onConnect (connect event) chỉ fire 1 lần</li>
-                    <li>✅ Verify onDisconnect (disconnect event) khi mất kết nối</li>
+                    <li>✅ Verify <strong>onOpen</strong> (connect event) chỉ fire 1 lần</li>
+                    <li>✅ Verify <strong>onClose</strong> (disconnect event) khi mất kết nối</li>
                     <li>✅ Test manual disconnect/reconnect</li>
+                    <li>✅ Test gửi message qua WebSocket</li>
                     <li>✅ Kiểm tra cleanup khi unmount không gây reconnect</li>
                 </ul>
+            </div>
+
+            <div style={styles.apiInfo}>
+                <h4 style={styles.infoTitle}>📡 WebSocket Message Format:</h4>
+                <pre style={styles.codeBlock}>{`{
+  "action": "onchat",
+  "data": {
+    "event": "LOGIN",
+    "data": {
+      "user": "long",
+      "pass": "12345"
+    }
+  }
+}`}</pre>
             </div>
         </div>
     );
@@ -275,6 +319,15 @@ const styles: { [key: string]: React.CSSProperties } = {
         fontWeight: 'bold',
         fontSize: '14px'
     },
+    wsInfo: {
+        padding: '12px',
+        background: '#e7f3ff',
+        border: '1px solid #b3d9ff',
+        borderRadius: '8px',
+        marginBottom: '20px',
+        fontSize: '13px',
+        color: '#004085'
+    },
     stats: {
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -301,16 +354,16 @@ const styles: { [key: string]: React.CSSProperties } = {
         letterSpacing: '1px'
     },
     controls: {
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '10px',
         marginBottom: '20px'
     },
     button: {
-        flex: 1,
-        padding: '12px 20px',
+        padding: '12px 16px',
         border: 'none',
         borderRadius: '8px',
-        fontSize: '14px',
+        fontSize: '13px',
         fontWeight: 'bold',
         cursor: 'pointer',
         transition: 'all 0.3s',
@@ -322,6 +375,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
     disconnectButton: {
         background: '#dc3545',
+        color: 'white'
+    },
+    testButton: {
+        background: '#6f42c1',
         color: 'white'
     },
     clearButton: {
@@ -385,7 +442,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         fontSize: '13px',
         display: 'flex',
         gap: '10px',
-        alignItems: 'center'
+        alignItems: 'flex-start'
     },
     logTimestamp: {
         color: '#999',
@@ -397,13 +454,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
     logMessage: {
         color: '#333',
-        flex: 1
+        flex: 1,
+        wordBreak: 'break-word'
     },
     info: {
         background: '#e7f3ff',
         border: '1px solid #b3d9ff',
         borderRadius: '8px',
-        padding: '20px'
+        padding: '20px',
+        marginBottom: '20px'
     },
     infoTitle: {
         margin: '0 0 10px 0',
@@ -414,6 +473,21 @@ const styles: { [key: string]: React.CSSProperties } = {
         margin: 0,
         paddingLeft: '20px',
         color: '#004085'
+    },
+    apiInfo: {
+        background: '#f8f9fa',
+        border: '1px solid #dee2e6',
+        borderRadius: '8px',
+        padding: '20px'
+    },
+    codeBlock: {
+        background: '#2d2d2d',
+        color: '#f8f8f2',
+        padding: '15px',
+        borderRadius: '6px',
+        overflow: 'auto',
+        fontSize: '12px',
+        margin: '10px 0 0 0'
     }
 };
 
