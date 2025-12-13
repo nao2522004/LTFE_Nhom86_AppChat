@@ -1,8 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks/hooks';
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
 import AuthPage from '../pages/AuthPage';
 import WebSocketTestPage from '../pages/WebSocketTestPage';
 
@@ -41,22 +39,6 @@ const AppRoutes: React.FC = () => {
                         </PublicRoute>
                     }
                 />
-                {/* <Route
-                    path="/login"
-                    element={
-                        <PublicRoute>
-                            <LoginPage />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/register"
-                    element={
-                        <PublicRoute>
-                            <RegisterPage />
-                        </PublicRoute>
-                    }
-                /> */}
 
                 {/* Protected Routes */}
                 <Route
@@ -72,7 +54,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/" element={<Navigate to="/websocket-test" replace />} />
                 
                 {/* 404 Route */}
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/auth" replace />} />
             </Routes>
         </BrowserRouter>
     );
