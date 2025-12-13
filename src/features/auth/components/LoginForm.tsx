@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import { login, clearError } from '../authSlice';
-import styles from './AuthForm.module.css';
+import styles from './LoginForm.module.css';
 
 const LoginForm: React.FC = () => {
     const [formData, setFormData] = useState({
