@@ -141,6 +141,20 @@
     transition: 0.3s;
 }
 
+/* Hide browser's default password reveal icon */
+.inputGroup input::-ms-reveal,
+.inputGroup input::-ms-clear {
+    display: none;
+}
+
+.inputGroup input::-webkit-credentials-auto-fill-button,
+.inputGroup input::-webkit-contacts-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
 .inputGroup input::placeholder {
     color: #5a756b;
 }
