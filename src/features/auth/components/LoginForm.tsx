@@ -4,7 +4,11 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import { login, clearError } from '../authSlice';
 import styles from './LoginForm.module.css';
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+    onSwitchToRegister?: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
     const [formData, setFormData] = useState({
         user: '',
         pass: ''
@@ -121,7 +125,7 @@ const LoginForm: React.FC = () => {
 
                             <div className={styles.registerLink}>
                                 Don't have an account?{' '}
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); onSwitchToRegister?.() }}>
                                     Register Now
                                 </a>
                             </div>

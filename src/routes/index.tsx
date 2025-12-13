@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks/hooks';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
+import AuthPage from '../pages/AuthPage';
 import WebSocketTestPage from '../pages/WebSocketTestPage';
 
 // Protected Route Component
@@ -10,7 +11,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/auth" replace />;
     }
     
     return <>{children}</>;
@@ -33,6 +34,14 @@ const AppRoutes: React.FC = () => {
             <Routes>
                 {/* Public Routes */}
                 <Route
+                    path="/auth"
+                    element={
+                        <PublicRoute>
+                            <AuthPage />
+                        </PublicRoute>
+                    }
+                />
+                {/* <Route
                     path="/login"
                     element={
                         <PublicRoute>
@@ -47,7 +56,7 @@ const AppRoutes: React.FC = () => {
                             <RegisterPage />
                         </PublicRoute>
                     }
-                />
+                /> */}
 
                 {/* Protected Routes */}
                 <Route
@@ -60,7 +69,7 @@ const AppRoutes: React.FC = () => {
                 />
 
                 {/* Default Route */}
-                <Route path="/" element={<Navigate to="/chat" replace />} />
+                <Route path="/" element={<Navigate to="/websocket-test" replace />} />
                 
                 {/* 404 Route */}
                 <Route path="*" element={<Navigate to="/login" replace />} />
