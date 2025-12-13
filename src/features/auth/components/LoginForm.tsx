@@ -40,80 +40,101 @@ const LoginForm: React.FC = () => {
 
     return (
         <div className={styles.authContainer}>
-            <div className={styles.authCard}>
-                <h1 className={styles.title}>Đăng nhập</h1>
-                <p className={styles.subtitle}>Chào mừng bạn trở lại!</p>
-
-                {error && (
-                    <div className={styles.errorMessage}>
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <div className={styles.formGroup}>
-                        <label htmlFor="user" className={styles.label}>
-                            Username
-                        </label>
-                        <input
-                            type="text"
-                            id="user"
-                            name="user"
-                            value={formData.user}
-                            onChange={handleChange}
-                            className={styles.input}
-                            placeholder="Nhập username của bạn (vd: long)"
-                            required
-                        />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label htmlFor="pass" className={styles.label}>
-                            Mật khẩu
-                        </label>
-                        <div className={styles.passwordInput}>
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                id="pass"
-                                name="pass"
-                                value={formData.pass}
-                                onChange={handleChange}
-                                className={styles.input}
-                                placeholder="Nhập mật khẩu (vd: 12345)"
-                                required
-                            />
-                            <button
-                                type="button"
-                                className={styles.togglePassword}
-                                onClick={() => setShowPassword(!showPassword)}
-                            >
-                                {showPassword ? '🙈' : '👁️'}
-                            </button>
+            <div className={styles.loginContainer}>
+                {/* Left Panel */}
+                <div className={styles.leftPanel}>
+                    <div className={styles.logo}>
+                        <img src="/images/auth/logo.png" alt="Logo" className={styles.logoImage} />
+                        <div className={styles.logoText}>
+                            <span>Nong Lam University</span>
+                            <span>Faculty of Information Technology</span>
+                            <span>DH22DTA</span>
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className={styles.submitButton}
-                        disabled={loading}
-                    >
-                        {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-                    </button>
-                </form>
+                    <div className={styles.illustration}>
+                        <img src="/images/auth/tree.png" alt="Christmas Tree" className={styles.treeImage} />
+                    </div>
 
-                <div className={styles.footer}>
-                    <p style={{ fontSize: '13px', color: '#666', marginTop: '20px' }}>
-                        💡 Hint: Username: <strong>long</strong>, Password: <strong>12345</strong>
-                    </p>
-                    <p>
-                        Chưa có tài khoản?{' '}
-                        <button
-                            onClick={() => navigate('/register')}
-                            className={styles.linkButton}
-                        >
-                            Đăng ký ngay
-                        </button>
-                    </p>
+                    <div className={styles.leftFooter}>
+                        <p>&copy; 2025 Nong Lam University</p>
+                        <p>Powered by Nhom86</p>
+                    </div>
+                </div>
+
+                {/* Right Panel */}
+                <div className={styles.rightPanel}>
+                    <div className={styles.loginFormWrapper}>
+                        <h2>Login</h2>
+
+                        {error && (
+                            <div className={styles.errorMessage}>
+                                {error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className={styles.form}>
+                            <div className={styles.inputGroup}>
+                                <label htmlFor="user">Username</label>
+                                <input
+                                    type="text"
+                                    id="user"
+                                    name="user"
+                                    value={formData.user}
+                                    onChange={handleChange}
+                                    placeholder="Enter your username"
+                                    required
+                                />
+                            </div>
+
+                            <div className={styles.inputGroup}>
+                                <label htmlFor="pass">Password</label>
+                                <div className={styles.passwordInputWrapper}>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        id="pass"
+                                        name="pass"
+                                        value={formData.pass}
+                                        onChange={handleChange}
+                                        placeholder="Enter your password"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.togglePassword}
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? '🙈' : '👁️'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <a href="#" className={styles.forgotPass}>Forgot Password?</a>
+
+                            <button
+                                type="submit"
+                                className={styles.btnLogin}
+                                disabled={loading}
+                            >
+                                {loading ? 'Logging in...' : 'Login'}
+                            </button>
+
+                            <div className={styles.registerLink}>
+                                Don't have an account?{' '}
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register'); }}>
+                                    Register Now
+                                </a>
+                            </div>
+                        </form>
+
+                        <div className={styles.rightFooter}>
+                            <a href="#">Terms and Services</a>
+                            <div className={styles.contactInfo}>
+                                Have a problem? Contact us at<br />
+                                <a href="mailto:22130157@st.hcmuaf.edu.vn">22130157@st.hcmuaf.edu.vn</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
