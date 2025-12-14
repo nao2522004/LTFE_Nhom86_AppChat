@@ -1,0 +1,345 @@
+.authContainer {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1b3830 0%, #2f5245 100%);
+    padding: 20px;
+}
+
+.registerContainer {
+    display: flex;
+    width: 900px;
+    background-color: white;
+    border-radius: 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+/* --- LEFT SECTION --- */
+.leftSection {
+    width: 55%;
+    background-color: white;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px;
+    clip-path: ellipse(120% 100% at 0% 50%);
+    z-index: 2;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logoImage {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.logoText {
+    display: flex;
+    flex-direction: column;
+    font-size: 10px;
+    font-weight: bold;
+    color: #1a4d7a;
+    letter-spacing: 1px;
+}
+
+.illustration {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.illustrationImage {
+    max-width: 80%;
+    max-height: 50vh;
+    object-fit: contain;
+}
+
+.leftFooter {
+    font-size: 12px;
+    color: #666;
+}
+
+.leftFooter p {
+    margin-bottom: 5px;
+}
+
+/* --- RIGHT SECTION --- */
+.rightSection {
+    width: 70%;
+    background-color: #29443B;
+    background-image: radial-gradient(circle at top right, #35554a, #29443B);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 40px;
+    padding-left: 20px;
+    border-radius: 30px;
+}
+
+.rightSection::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+    top: -50px;
+    right: -50px;
+}
+
+.formContainer {
+    width: 100%;
+    max-width: 380px;
+    color: var(--text-white);
+    z-index: 10;
+}
+
+.formContainer h2 {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: white;
+}
+
+/* --- FORM STYLING --- */
+.form {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputGroup {
+    margin-bottom: 15px;
+}
+
+.inputGroup label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #d0dcd8;
+}
+
+.inputGroup input {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 25px;
+    border: none;
+    background-color: #1F362F;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+}
+
+/* Hide browser's default password reveal icon */
+.inputGroup input::-ms-reveal,
+.inputGroup input::-ms-clear {
+    display: none;
+}
+
+.inputGroup input::-webkit-credentials-auto-fill-button,
+.inputGroup input::-webkit-contacts-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+.inputGroup input::placeholder {
+    color: #5a756b;
+}
+
+.inputGroup input:focus {
+    box-shadow: 0 0 0 2px #5D9B90;
+}
+
+.passwordInputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.passwordInputWrapper input {
+    width: 100%;
+    padding-right: 50px;
+}
+
+.togglePassword {
+    position: absolute;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.togglePassword:hover {
+    opacity: 0.7;
+}
+
+.rowGroup {
+    display: flex;
+    gap: 15px;
+}
+
+.rowGroup .inputGroup {
+    flex: 1;
+}
+
+/* Checkbox style */
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    margin-bottom: 20px;
+    color: #B0C4BE;
+}
+
+.checkboxGroup input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+.checkboxGroup label {
+    margin: 0;
+    cursor: pointer;
+}
+
+.checkboxGroup a {
+    color: #5D9B90;
+    text-decoration: none;
+}
+
+.checkboxGroup a:hover {
+    text-decoration: underline;
+}
+
+.btnRegister {
+    width: 100%;
+    padding: 12px;
+    border-radius: 25px;
+    border: none;
+    background-color: #5D9B90;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btnRegister:hover:not(:disabled) {
+    background-color: #4e857a;
+    transform: translateY(-1px);
+}
+
+.btnRegister:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loginLink {
+    text-align: center;
+    font-size: 13px;
+    color: #B0C4BE;
+}
+
+.loginLink p {
+    margin: 0;
+}
+
+.loginLink a {
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.loginLink a:hover {
+    text-decoration: underline;
+}
+
+.rightFooter {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 11px;
+    color: #5a756b;
+}
+
+.rightFooter p {
+    margin: 0;
+}
+
+.rightFooter a {
+    color: #5D9B90;
+    text-decoration: none;
+}
+
+.rightFooter a:hover {
+    text-decoration: underline;
+}
+
+.errorMessage {
+    padding: 12px;
+    background: rgba(255, 100, 100, 0.2);
+    border: 1px solid rgba(255, 100, 100, 0.5);
+    border-radius: 8px;
+    color: #ffcccc;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* --- RESPONSIVE (Mobile) --- */
+@media (max-width: 900px) {
+    .registerContainer {
+        flex-direction: column;
+        overflow-y: auto;
+        width: 90%;
+        max-width: 450px;
+    }
+
+    .leftSection {
+        width: 100%;
+        height: 30vh;
+        padding: 20px;
+        clip-path: none;
+        border-bottom-right-radius: 50px;
+        border-bottom-left-radius: 50px;
+    }
+
+    .illustration,
+    .leftFooter {
+        display: none;
+    }
+
+    .rightSection {
+        width: 100%;
+        height: auto;
+        padding: 30px 20px;
+    }
+
+    .formContainer {
+        max-width: 100%;
+    }
+
+    .rowGroup {
+        flex-direction: column;
+        gap: 0;
+    }
+}
