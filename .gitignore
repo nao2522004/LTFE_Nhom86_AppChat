@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Cấu hình IDE của JetBrains (IntelliJ, WebStorm, PhpStorm...)
+.idea/
