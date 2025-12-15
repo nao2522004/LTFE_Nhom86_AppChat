@@ -7,6 +7,12 @@
     --btn-color: #5d8e85;
     --text-white: #ffffff;
     --text-gray: #aab6b1;
+
+    --bg-chat: #eff5f3;
+    --bg-gray-chat: #f0f2f5;
+    --text-dark-chat: #333;
+    --text-light-chat: #888;
+    --danger-color-chat: #ff6b6b;
 }
 
 * {

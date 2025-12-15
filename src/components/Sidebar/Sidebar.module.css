@@ -1,0 +1,53 @@
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 80px;
+    background-color: var(--bg-dark-green);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 0;
+    flex-shrink: 0;
+}
+
+.userProfile img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid white;
+    margin-bottom: 40px;
+    object-fit: cover;
+}
+
+.navMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+    align-items: center;
+}
+
+.navItem {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.navItem:hover, .navItem.active {
+    color: white;
+}
+
+.logoutBtn {
+    margin-top: auto;
+    margin-bottom: 20px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.4rem;
+    transition: 0.3s;
+}
+
+.logoutBtn:hover {
+    color: var(--danger-color-chat);
+    transform: scale(1.1);
+}

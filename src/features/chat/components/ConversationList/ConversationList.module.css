@@ -1,0 +1,90 @@
+/* --- CONVERSATION --- */
+.listPanel {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.searchBox {
+    background: white;
+    padding: 12px 20px;
+    border-radius: 15px;
+    border: 1px solid var(--bg-light-green);
+    display: flex;
+    align-items: center;
+}
+
+.searchBox i { color: var(--text-light-chat); margin-right: 10px; }
+.searchBox input { border: none; outline: none; width: 100%; color: var(--text-dark-chat); }
+
+.sectionTitle {
+    font-weight: bold;
+    color: var(--text-dark-chat);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.chatListCard {
+    background: white;
+    border-radius: 15px;
+    border: 1px solid var(--bg-light-green);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chatItem {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+}
+
+.chatItem:last-child { border-bottom: none; }
+.chatItem:hover { background-color: #f6f6f6; border-radius: 10px; }
+/* .chatItem.active { background-color: #fdfcf5; } */
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.chatInfo { flex: 1; }
+.chatName { font-weight: 600; font-size: 0.95rem; color: var(--text-dark-chat); }
+.chatPreview { font-size: 0.8rem; color: var(--text-light-chat); margin-top: 3px; display: block; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+.chatMeta {
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-light-chat);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.badge {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 0.7rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.badge.checkDouble {
+    background: none;
+    color: var(--text-dark-chat);
+}

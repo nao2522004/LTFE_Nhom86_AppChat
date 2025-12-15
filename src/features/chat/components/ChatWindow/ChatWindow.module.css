@@ -1,0 +1,133 @@
+/* --- CHAT WINDOW --- */
+.chatPanel {
+    flex: 1;
+    background: white;
+    border-radius: 15px;
+    border: 1px solid var(--bg-light-green);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    min-width: 400px;
+}
+
+/* Header */
+.chatHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.headerUser { display: flex; align-items: center; }
+.headerUser img { width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; }
+.userStatus h3 { font-size: 1rem; color: var(--text-dark-chat); }
+.userStatus span { font-size: 0.8rem; color: var(--text-light-chat); }
+
+.headerIcons i {
+    color: #ccc;
+    margin-left: 20px;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.chatBody {
+    flex: 1;
+    padding: 20px 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chatBody::-webkit-scrollbar { width: 6px; }
+.chatBody::-webkit-scrollbar-thumb { background-color: #eee; border-radius: 10px; }
+
+.message {
+    display: flex;
+    align-items: flex-end;
+    max-width: 70%;
+    position: relative;
+}
+
+.message.received { align-self: flex-start; }
+.message.sent { align-self: flex-end; flex-direction: row-reverse; }
+
+.msgBubble {
+    padding: 12px 18px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    position: relative;
+}
+
+.message.received .msgBubble {
+    background-color: var(--bg-chat);
+    color: var(--text-dark-chat);
+    border-bottom-left-radius: 5px;
+}
+
+.message.sent .msgBubble {
+    background-color: var(--bg-dark-green);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.msgTime {
+    font-size: 0.7rem;
+    color: #aaa;
+    margin-top: 5px;
+    position: absolute;
+    bottom: -20px;
+    width: max-content;
+}
+.message.received .msgTime { left: 5px; }
+.message.sent .msgTime { right: 5px; }
+
+/* Input area */
+.chatFooter {
+    padding-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.inputWrapper {
+    flex: 1;
+    background-color: var(--bg-chat);
+    border-radius: 30px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+}
+
+.inputWrapper i.attachIcon { color: #888; margin-right: 15px; cursor: pointer; transform: rotate(45deg); }
+.inputWrapper input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex: 1;
+    font-size: 0.95rem;
+}
+.inputWrapper i.emojiIcon, .inputWrapper i.cameraIcon {
+    color: #888;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.micBtn {
+    background-color: var(--bg-dark-green);
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 10px rgba(150, 140, 62, 0.4);
+    transition: 0.2s;
+}
+
+.micBtn:hover { transform: scale(1.05); }
