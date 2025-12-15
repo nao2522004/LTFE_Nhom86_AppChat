@@ -22,7 +22,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage }) => {
     return (
         <div className={styles.chatFooter}>
             <div className={styles.inputWrapper}>
-                <i className="fas fa-paperclip attach-icon"></i>
+                <i className={`fas fa-paperclip ${styles.attachIcon}`}></i>
                 <input
                     type="text"
                     placeholder="Type your message here..."
@@ -30,8 +30,8 @@ const ChatInput: React.FC<Props> = ({ onSendMessage }) => {
                     onChange={(e) => setText(e.target.value)}
                     onKeyDown={handleKeyPress}
                 />
-                <i className="far fa-laugh emoji-icon"></i>
-                <i className="fas fa-camera camera-icon"></i>
+                <i className={`far fa-laugh ${styles.emojiIcon}`}></i>
+                <i className={`fas fa-camera ${styles.cameraIcon}`}></i>
             </div>
             <button className={styles.micBtn} onClick={handleSend}>
                 <i className={`fas ${text.trim() ? 'fa-paper-plane' : 'fa-microphone'}`}></i>

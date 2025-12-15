@@ -101,7 +101,7 @@
     align-items: center;
 }
 
-.inputWrapper i.attach-icon { color: #888; margin-right: 15px; cursor: pointer; transform: rotate(45deg); }
+.inputWrapper i.attachIcon { color: #888; margin-right: 15px; cursor: pointer; transform: rotate(45deg); }
 .inputWrapper input {
     border: none;
     background: transparent;
@@ -109,7 +109,7 @@
     flex: 1;
     font-size: 0.95rem;
 }
-.inputWrapper i.emoji-icon, .inputWrapper i.camera-icon {
+.inputWrapper i.emojiIcon, .inputWrapper i.cameraIcon {
     color: #888;
     margin-left: 10px;
     cursor: pointer;

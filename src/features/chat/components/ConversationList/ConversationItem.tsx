@@ -24,7 +24,7 @@ const ConversationItem: React.FC<ConversationProps> = ({ avatar, name, lastMessa
                 {unreadCount ? (
                     <span className={styles.badge}>{unreadCount}</span>
                 ) : isOnline ? (
-                    <span className={styles.badge}>
+                    <span className={`${styles.badge} ${styles.checkDouble}`}>
                         <i className="fas fa-check-double"></i>
                     </span>
                 ) : null}
