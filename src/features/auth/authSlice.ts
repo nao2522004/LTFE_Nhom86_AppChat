@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import websocketService from '../../services/websocket';
+import websocketService, { ReLoginData } from '../../services/websocket';
 import { User } from '../../types/user';
 
 interface AuthState {
@@ -35,16 +35,43 @@ export const login = createAsyncThunk(
             const response = await websocketService.login(credentials);
             
             // Save to localStorage
-            if (response.token) {
-                localStorage.setItem('token', response.token);
+            if (response.RE_LOGIN_CODE) {
+                localStorage.setItem("user", credentials.user);
+                localStorage.setItem("token", response.RE_LOGIN_CODE);
             }
-            if (response.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-            }
+            // if (response.user) {
+            //     localStorage.setItem('user', JSON.stringify(response.user));
+            // }
             
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Đăng nhập thất bại');
+        }
+    }
+);
+
+// ReLogin thunk
+export const reLogin = createAsyncThunk(
+    "auth/reLogin",
+    async (credentials: ReLoginData, { rejectWithValue }) => {
+        try {
+            websocketService.connect();
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const response = await websocketService.reLogin(credentials);
+
+            if (!response.RE_LOGIN_CODE) {
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
+                return rejectWithValue("Token timeout or invalid");
+            } 
+
+            localStorage.setItem("token", response.RE_LOGIN_CODE);
+
+            return response;
+        } catch(error: any) {
+            return rejectWithValue(error.message || "ReLogin failed");
         }
     }
 );
@@ -170,6 +197,25 @@ const authSlice = createSlice({
                 state.error = action.payload as string;
                 state.wsConnected = false;
             });
+
+        // ReLogin
+        builder
+            .addCase(reLogin.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(reLogin.fulfilled, (state, action) => {
+                state.loading = false;
+                state.isAuthenticated = true;
+                state.token = action.payload.RE_LOGIN_CODE;
+                state.error = null;
+                state.wsConnected = true;
+            })
+            .addCase(reLogin.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+                state.wsConnected = false;
+            })
 
         // Register
         builder
