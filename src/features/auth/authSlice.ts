@@ -35,12 +35,14 @@ export const login = createAsyncThunk(
             const response = await websocketService.login(credentials);
             
             // Save to localStorage
-            if (response.token) {
-                localStorage.setItem('token', response.token);
+            if (response.RE_LOGIN_CODE) {
+                console.log(response.RE_LOGIN_CODE);
+                
+                localStorage.setItem('token', response.RE_LOGIN_CODE);
             }
-            if (response.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-            }
+            // if (response.user) {
+            //     localStorage.setItem('user', JSON.stringify(response.user));
+            // }
             
             return response;
         } catch (error: any) {
