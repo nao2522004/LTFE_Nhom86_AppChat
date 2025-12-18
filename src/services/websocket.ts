@@ -293,7 +293,7 @@ class WebSocketService {
                     console.log("Login Success!");
                     resolve(response.data);
                 } else {
-                    reject(new Error(response.message || 'Login failed'));
+                    reject(new Error(response.mes || 'Login failed'));
                 }
             };
 
@@ -313,38 +313,37 @@ class WebSocketService {
         });
     }
 
-    async register(userData: RegisterData): Promise<any> {
+    async register(credentials: RegisterData): Promise<any> {
         return new Promise((resolve, reject) => {
             const timeoutId = setTimeout(() => {
-                this.off('REGISTER_SUCCESS', handleSuccess);
-                this.off('REGISTER_ERROR', handleError);
+                this.off('REGISTER', handleResponse);
                 reject(new Error('Register timeout'));
             }, 10000);
 
-            const handleSuccess = (data: any) => {
+            const handleResponse = (response: any) => {
                 clearTimeout(timeoutId);
-                this.off('REGISTER_SUCCESS', handleSuccess);
-                this.off('REGISTER_ERROR', handleError);
-                resolve({ success: true, ...data });
+                this.off('REGISTER', handleResponse);
+                
+                if (response.status === "success") {
+                    resolve(response.data)
+                } else {
+                    reject(new Error(response.mes || "Register failed"))
+                }
             };
 
-            const handleError = (data: any) => {
-                clearTimeout(timeoutId);
-                this.off('REGISTER_SUCCESS', handleSuccess);
-                this.off('REGISTER_ERROR', handleError);
-                reject(new Error(data.message || 'Register failed'));
-            };
-
-            this.on('REGISTER_SUCCESS', handleSuccess);
-            this.on('REGISTER_ERROR', handleError);
+            this.on('REGISTER', handleResponse);
 
             this.send({
                 action: 'onchat',
                 data: {
                     event: 'REGISTER',
-                    data: userData
+                    data: credentials
                 }
-            }).catch(reject);
+            }).catch((err) => {
+                clearTimeout(timeoutId);
+                this.off('REGISTER', handleResponse);
+                reject(err);
+            });
         });
     }
 
@@ -392,4 +391,5 @@ class WebSocketService {
     }
 }
 
-export default new WebSocketService();
+const webSocketService = new WebSocketService();
+export default webSocketService;
