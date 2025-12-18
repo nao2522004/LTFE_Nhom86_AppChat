@@ -13,6 +13,11 @@ export interface LoginData {
     pass: string;
 }
 
+export interface ReLoginData {
+    user: string;
+    code: string;
+}
+
 export interface RegisterData {
     user: string;
     pass: string;
@@ -313,6 +318,40 @@ class WebSocketService {
         });
     }
 
+    async reLogin(credentials: ReLoginData): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                this.off("RE_LOGIN", handleResponse);
+                reject(new Error("RE_LOGIN timeout"));
+            }, 10000);
+
+            const handleResponse = (response: any) => {
+                clearTimeout(timeoutId);
+                this.off("RE_LOGIN", handleResponse);
+
+                if (response.status === "success") {
+                    resolve(response.data);
+                } else {
+                    reject(new Error(response.mes || "RE_LOGIN failed"));
+                }
+            };
+
+            this.on("RE_LOGIN", handleResponse);
+
+            this.send({
+                action: "onchat",
+                data: {
+                    event: "RE_LOGIN",
+                    data: credentials
+                }
+            }).catch((err) => {
+                clearTimeout(timeoutId);
+                this.off("RE_LOGIN", handleResponse);
+                reject(err);
+            });
+        });
+    }
+
     async register(credentials: RegisterData): Promise<any> {
         return new Promise((resolve, reject) => {
             const timeoutId = setTimeout(() => {
@@ -325,9 +364,9 @@ class WebSocketService {
                 this.off('REGISTER', handleResponse);
                 
                 if (response.status === "success") {
-                    resolve(response.data)
+                    resolve(response.data);
                 } else {
-                    reject(new Error(response.mes || "Register failed"))
+                    reject(new Error(response.mes || "Register failed"));
                 }
             };
 
