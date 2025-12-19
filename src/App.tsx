@@ -2,9 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import AppRoutes from './routes';
 import { useAppDispatch } from './hooks/hooks';
 import { reLogin } from './features/auth/authSlice';
+import { useWebSocketSetup } from './hooks/useWebSocketSetup';
 
 function App() {
     const dispatch = useAppDispatch();
+
+    // Setup WebSocket event listeners
+    useWebSocketSetup();
 
     // check auth
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -18,7 +22,7 @@ function App() {
         const checkAuth = async () => {
             const token = localStorage.getItem("token");
             const user = localStorage.getItem("user");
-    
+
             if (token && user) {
                 try {
                     await dispatch(reLogin({ user: user, code: token }));
@@ -35,7 +39,18 @@ function App() {
     }, [dispatch]);
 
     if (isCheckingAuth) {
-        return <div className="loading-screen">Đang kết nối lại...</div>;
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                fontSize: '18px',
+                color: '#254e42'
+            }}>
+                🔄 Đang kết nối lại...
+            </div>
+        );
     }
 
     return <AppRoutes />;

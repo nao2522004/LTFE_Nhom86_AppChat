@@ -1,0 +1,9 @@
+.reconnecting {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.reconnecting .dot {
+    background: #ffc107;
+    animation: pulse 1s infinite;
+}

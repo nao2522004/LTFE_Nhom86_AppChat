@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppSelector } from '../../hooks/hooks';
-import websocketService from "../../services/websocket";
+import websocketService from "../../services/websocket/MainService";
 
 interface ConnectionLog {
     timestamp: string;
