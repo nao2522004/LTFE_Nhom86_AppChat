@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../../types/user';
-import websocketService, {ReLoginData} from "../../services/websocket";
+import websocketService, {ReLoginData} from "../../services/websocket/MainService";
 
 interface AuthState {
     user: User | null;

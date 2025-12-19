@@ -1,14 +1,18 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {Message, Room} from "../../types/chat";
+import websocketService from "../../services/websocket/MainService";
 
 interface ChatState {
     messages: Message[];
     rooms: Room[];
     activeRoomId: string | null;
-    subscribedChannels: string[];
+    subscribedChannels: string[]; // quan ly kenh theo doi de nhan tin nhan
     loading: boolean;
     error: string | null;
     sendingMessages: string[];
+    currentPage: number;
+    hasMoreMessages: boolean;
+    userList: any[];
 }
 
 // ===== INITIAL STATE =====
@@ -19,8 +23,126 @@ const initialState: ChatState = {
     subscribedChannels: [],
     loading: false,
     error: null,
-    sendingMessages: []
+    sendingMessages: [],
+    currentPage: 1,
+    hasMoreMessages: true,
+    userList: []
 };
+
+// ===== ASYNC THUNKS FOR API =====
+/**
+ * EVENT: CREATE_ROOM API
+ * Request: DATA: { "name": "ABC" }
+ */
+export const createRoom = createAsyncThunk(
+    'chat/createRoom',
+    async (roomName: string, { rejectWithValue }) => {
+        try {
+            const response = await websocketService.createRoom({ name: roomName });
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to create room');
+        }
+    }
+);
+
+/**
+ * EVENT: JOIN_ROOM API
+ * Request: DATA: { "name": "ABC" }
+ */
+export const joinRoom = createAsyncThunk(
+    'chat/joinRoom',
+    async (roomName: string, { rejectWithValue }) => {
+        try {
+            const response = await websocketService.createRoom({ name: roomName });
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to join room');
+        }
+    }
+);
+
+/**
+ * GET_ROOM_CHAT_MES API
+ * Request: { "name": "ABC", "page": 1 }
+ */
+export const getRoomMessages = createAsyncThunk(
+    'chat/getRoomMessages',
+    async ({ roomName, page }: { roomName: string; page: number }, { rejectWithValue }) => {
+        try {
+            const response = await websocketService.getRoomMessages({ name: roomName, page });
+            return { roomName, messages: response.messages || [], page };
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to get room messages');
+        }
+    }
+);
+
+/**
+ * GET_PEOPLE_CHAT_MES API
+ * Request: { "name": "ti", "page": 1 }
+ */
+export const getPeopleMessages = createAsyncThunk(
+    'chat/getPeopleMessages',
+    async ({ userName, page }: { userName: string; page: number }, { rejectWithValue }) => {
+        try {
+            const response = await websocketService.getPeopleMessages({ name: userName, page });
+            return { userName, messages: response.messages || [], page };
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to get people messages');
+        }
+    }
+);
+
+/**
+ * SEND_CHAT API
+ * Request: { "type": "room"|"people", "to": "abc", "mes": "hello" }
+ */
+export const sendChatMessage = createAsyncThunk(
+    'chat/sendMessage',
+    async (
+        { type, to, mes }: { type: 'room' | 'people'; to: string; mes: string },
+        { rejectWithValue }
+    ) => {
+        try {
+            await websocketService.sendChat({ type, to, mes });
+            return { type, to, mes, timestamp: new Date() };
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to send message');
+        }
+    }
+);
+
+/**
+ * CHECK_USER API
+ * Request: { "user": "ti" }
+ */
+export const checkUser = createAsyncThunk(
+    'chat/checkUser',
+    async (username: string, { rejectWithValue }) => {
+        try {
+            const response = await websocketService.checkUser({ user: username });
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to check user');
+        }
+    }
+);
+
+/**
+ * GET_USER_LIST API
+ */
+export const getUserList = createAsyncThunk(
+    'chat/getUserList',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await websocketService.getUserList();
+            return response.users || [];
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to get user list');
+        }
+    }
+);
 
 // ===== SLICE =====
 const chatSlice = createSlice({
@@ -157,6 +279,15 @@ const chatSlice = createSlice({
             state.error = null;
         },
 
+        // ===== PAGINATION =====
+        setCurrentPage: (state, action: PayloadAction<number>) => {
+            state.currentPage = action.payload;
+        },
+
+        setHasMoreMessages: (state, action: PayloadAction<boolean>) => {
+            state.hasMoreMessages = action.payload;
+        },
+
         // ===== RESET =====
         resetChat: (state) => {
             state.messages = [];
@@ -166,7 +297,151 @@ const chatSlice = createSlice({
             state.loading = false;
             state.error = null;
             state.sendingMessages = [];
+            state.currentPage = 1;
+            state.hasMoreMessages = true;
+            state.userList = [];
         }
+    },
+    extraReducers: (builder) => {
+        // ===== CREATE ROOM =====
+        builder
+            .addCase(createRoom.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(createRoom.fulfilled, (state, action) => {
+                state.loading = false;
+                // Add room to list if returned from API
+                if (action.payload.room) {
+                    const exists = state.rooms.find(r => r.id === action.payload.room.id);
+                    if (!exists) {
+                        state.rooms.push(action.payload.room);
+                    }
+                }
+            })
+            .addCase(createRoom.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== JOIN ROOM =====
+        builder
+            .addCase(joinRoom.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(joinRoom.fulfilled, (state, action) => {
+                state.loading = false;
+                // Subscribe to room after joining
+                if (action.payload.roomName) {
+                    if (!state.subscribedChannels.includes(action.payload.roomName)) {
+                        state.subscribedChannels.push(action.payload.roomName);
+                    }
+                }
+            })
+            .addCase(joinRoom.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== GET ROOM MESSAGES =====
+        builder
+            .addCase(getRoomMessages.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getRoomMessages.fulfilled, (state, action) => {
+                state.loading = false;
+                const { messages, page } = action.payload;
+
+                if (page === 1) {
+                    // Replace messages if page 1
+                    state.messages = messages;
+                } else {
+                    // Append for pagination
+                    const newMessages = messages.filter(
+                        (msg: Message) => !state.messages.find(m => m.id === msg.id)
+                    );
+                    state.messages = [...state.messages, ...newMessages];
+                }
+
+                state.currentPage = page;
+                state.hasMoreMessages = messages.length > 0;
+            })
+            .addCase(getRoomMessages.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== GET PEOPLE MESSAGES =====
+        builder
+            .addCase(getPeopleMessages.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getPeopleMessages.fulfilled, (state, action) => {
+                state.loading = false;
+                const { messages, page } = action.payload;
+
+                if (page === 1) {
+                    state.messages = messages;
+                } else {
+                    const newMessages = messages.filter(
+                        (msg: Message) => !state.messages.find(m => m.id === msg.id)
+                    );
+                    state.messages = [...state.messages, ...newMessages];
+                }
+
+                state.currentPage = page;
+                state.hasMoreMessages = messages.length > 0;
+            })
+            .addCase(getPeopleMessages.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== SEND MESSAGE =====
+        builder
+            .addCase(sendChatMessage.pending, (state) => {
+                state.error = null;
+            })
+            .addCase(sendChatMessage.fulfilled, (state, action) => {
+                // Message will be received via WebSocket SEND_CHAT event
+                // Just clear any error
+                state.error = null;
+            })
+            .addCase(sendChatMessage.rejected, (state, action) => {
+                state.error = action.payload as string;
+            });
+
+        // ===== CHECK USER =====
+        builder
+            .addCase(checkUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(checkUser.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(checkUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== GET USER LIST =====
+        builder
+            .addCase(getUserList.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUserList.fulfilled, (state, action) => {
+                state.loading = false;
+                state.userList = action.payload;
+            })
+            .addCase(getUserList.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
     }
 });
 
@@ -192,6 +467,8 @@ export const {
     setLoading,
     setError,
     clearError,
+    setCurrentPage,
+    setHasMoreMessages,
     resetChat
 } = chatSlice.actions;
 
@@ -202,6 +479,9 @@ export const selectActiveRoomId = (state: { chat: ChatState }) => state.chat.act
 export const selectSubscribedChannels = (state: { chat: ChatState }) => state.chat.subscribedChannels;
 export const selectChatLoading = (state: { chat: ChatState }) => state.chat.loading;
 export const selectChatError = (state: { chat: ChatState }) => state.chat.error;
+export const selectUserList = (state: { chat: ChatState }) => state.chat.userList;
+export const selectCurrentPage = (state: { chat: ChatState }) => state.chat.currentPage;
+export const selectHasMoreMessages = (state: { chat: ChatState }) => state.chat.hasMoreMessages;
 
 // New selector for checking if a message is sending
 export const selectIsMessageSending = (messageId: string) => (state: { chat: ChatState }) => {
