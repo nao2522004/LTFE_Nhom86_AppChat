@@ -125,7 +125,7 @@ class SocketService {
         return this.emit('auth:me');
     }
 
-    // Message events
+    // Chat events
     sendMessage(messageData: any) {
         return this.emit('message:send', messageData);
     }

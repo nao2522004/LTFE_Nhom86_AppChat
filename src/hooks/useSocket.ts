@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
-import socketService from '../services/socket';
+import socketService from '../services/websocket/socket';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { setWsConnected } from '../features/auth/authSlice';
 

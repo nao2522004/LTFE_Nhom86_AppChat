@@ -18,7 +18,7 @@ export interface Message {
 export type UserStatus = 'online' | 'offline' | 'away';
 
 export interface User {
-    id: string;  // ✅ Consistent với Message
+    id: string;  // ✅ Consistent với Chat
     username: string;
     displayName?: string;
     avatar?: string;
@@ -301,5 +301,5 @@ export interface UserPermissions {
 export default {
     // This allows importing all types as a namespace
     // import Types from './shared.types';
-    // Types.Message, Types.User, etc.
+    // Types.Chat, Types.User, etc.
 };

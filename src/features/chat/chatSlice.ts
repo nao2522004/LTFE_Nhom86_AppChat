@@ -1,29 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-// ===== TYPES =====
-export interface Message {
-    id: string;
-    content: string;
-    sender: {
-        id: string;
-        username: string;
-        displayName?: string;
-        avatar?: string;
-    };
-    roomId: string;
-    timestamp: Date;
-    status: 'sending' | 'sent' | 'failed';
-    type: 'text' | 'image' | 'link' | 'emoji';
-}
-
-export interface Room {
-    id: string;
-    name: string;
-    type: 'private' | 'group';
-    participants: string[];
-    lastMessage?: Message;
-    unreadCount: number;
-}
+import {Message, Room} from "../../types/chat";
 
 interface ChatState {
     messages: Message[];
@@ -32,7 +8,7 @@ interface ChatState {
     subscribedChannels: string[];
     loading: boolean;
     error: string | null;
-    sendingMessages: Set<string>; // Track messages being sent
+    sendingMessages: string[];
 }
 
 // ===== INITIAL STATE =====
@@ -43,7 +19,7 @@ const initialState: ChatState = {
     subscribedChannels: [],
     loading: false,
     error: null,
-    sendingMessages: new Set()
+    sendingMessages: []
 };
 
 // ===== SLICE =====
@@ -88,15 +64,17 @@ const chatSlice = createSlice({
 
         // Track sending status
         markMessageSending: (state, action: PayloadAction<string>) => {
-            state.sendingMessages.add(action.payload);
+            if (!state.sendingMessages.includes(action.payload)) {
+                state.sendingMessages.push(action.payload);
+            }
         },
 
         markMessageSent: (state, action: PayloadAction<string>) => {
-            state.sendingMessages.delete(action.payload);
+            state.sendingMessages = state.sendingMessages.filter(id => id !== action.payload);
         },
 
         markMessageFailed: (state, action: PayloadAction<string>) => {
-            state.sendingMessages.delete(action.payload);
+            state.sendingMessages = state.sendingMessages.filter(id => id !== action.payload);
             const message = state.messages.find(m => m.id === action.payload);
             if (message) {
                 message.status = 'failed';
@@ -187,7 +165,7 @@ const chatSlice = createSlice({
             state.subscribedChannels = [];
             state.loading = false;
             state.error = null;
-            state.sendingMessages = new Set();
+            state.sendingMessages = [];
         }
     }
 });
@@ -224,6 +202,11 @@ export const selectActiveRoomId = (state: { chat: ChatState }) => state.chat.act
 export const selectSubscribedChannels = (state: { chat: ChatState }) => state.chat.subscribedChannels;
 export const selectChatLoading = (state: { chat: ChatState }) => state.chat.loading;
 export const selectChatError = (state: { chat: ChatState }) => state.chat.error;
+
+// New selector for checking if a message is sending
+export const selectIsMessageSending = (messageId: string) => (state: { chat: ChatState }) => {
+    return state.chat.sendingMessages.includes(messageId);
+};
 
 // Advanced selectors
 export const selectActiveRoomMessages = (state: { chat: ChatState }) => {
