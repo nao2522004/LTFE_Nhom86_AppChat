@@ -26,7 +26,7 @@ export interface AuthResponse {
     message?: string;
 }
 
-// Message Events
+// Chat Events
 export interface SendMessageRequest {
     conversationId: string;
     content: string;
