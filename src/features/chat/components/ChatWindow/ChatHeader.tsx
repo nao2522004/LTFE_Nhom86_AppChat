@@ -1,14 +1,23 @@
 import React from "react";
 import styles from "./ChatWindow.module.css";
 
-const ChatHeader: React.FC = () => {
+interface ChatHeaderProps {
+    name: string;
+    avatar: string;
+    isOnline: boolean;
+    lastSeen: string;
+}
+
+const ChatHeader: React.FC<ChatHeaderProps> = ({ name, avatar, isOnline, lastSeen }) => {
     return (
         <div className={styles.chatHeader}>
             <div className={styles.headerUser}>
-                <img src="https://i.pravatar.cc/150?img=3" alt="Anil" />
+                <img src={avatar} alt={name} />
                 <div className={styles.userStatus}>
-                    <h3>Anil</h3>
-                    <span>Online - Last seen, 2:02pm</span>
+                    <h3>{name}</h3>
+                    <span>
+                        {isOnline ? 'Online' : `Last seen, ${lastSeen}`}
+                    </span>
                 </div>
             </div>
             <div className={styles.headerIcons}>

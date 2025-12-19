@@ -22,7 +22,7 @@ const WebSocketTestPage: React.FC = () => {
                         {isAuthenticated && user && (
                             <>
                                 <span style={styles.userInfo}>
-                                    👤 {user.displayName || user.username}
+                                    {user.displayName || user.username}
                                 </span>
                                 <button onClick={handleLogout} style={styles.logoutButton}>
                                     Đăng xuất
