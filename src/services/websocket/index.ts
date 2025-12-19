@@ -1,8 +1,3 @@
-// ============================================
-// src/services/websocket/mainService.ts
-// NHIỆM VỤ: Tạo instance duy nhất và export
-// ============================================
-
 import { WebSocketConnection } from './WebSocketConnection';
 import { AuthService } from './AuthService';
 import { ChatService } from './ChatService';
