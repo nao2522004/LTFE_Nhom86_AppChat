@@ -1,9 +1,13 @@
 import React, {useEffect} from "react";
-import ConversationList from "../features/chat/components/ConversationList";
-import ChatWindow from "../features/chat/components/ChatWindow";
 import {useAppDispatch, useAppSelector} from "../hooks/hooks";
 import {getUserList} from "../features/chat/chatSlice";
+import ConversationListContainer from "../features/chat/containers/ConversationListContainer";
+import ChatWindowContainer from "../features/chat/containers/ChatWindowContainer";
 
+/**
+ * PAGE
+ * Chỉ chứa layout và gọi containers
+ */
 const ChatPage: React.FC = () => {
     const dispatch = useAppDispatch();
     const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -18,8 +22,8 @@ const ChatPage: React.FC = () => {
 
     return (
         <>
-            <ConversationList />
-            <ChatWindow />
+            <ConversationListContainer />
+            <ChatWindowContainer />
         </>
     );
 };

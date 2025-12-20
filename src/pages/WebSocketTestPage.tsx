@@ -2,7 +2,7 @@ import React from 'react';
 import WebSocketTest from '../components/WebSocketTest/WebSocketTest';
 import { useAppDispatch, useAppSelector } from '../hooks/hooks';
 import { logout } from '../features/auth/authSlice';
-import SocketIndicator from '../components/SocketIndicator/SocketIndicator';
+import SocketIndicatorContainer from '../features/connection/containers/SocketIndicatorContainer';
 
 const WebSocketTestPage: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -18,7 +18,7 @@ const WebSocketTestPage: React.FC = () => {
                 <div style={styles.navContent}>
                     <h1 style={styles.navTitle}>WebSocket Test Dashboard</h1>
                     <div style={styles.navRight}>
-                        <SocketIndicator />
+                        <SocketIndicatorContainer />
                         {isAuthenticated && user && (
                             <>
                                 <span style={styles.userInfo}>

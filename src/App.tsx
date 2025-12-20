@@ -48,7 +48,7 @@ function App() {
                 fontSize: '18px',
                 color: '#254e42'
             }}>
-                🔄 Đang kết nối lại...
+                Đang kết nối lại...
             </div>
         );
     }
