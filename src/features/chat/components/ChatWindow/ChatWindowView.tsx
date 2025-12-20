@@ -1,82 +1,49 @@
-import React, {useEffect, useRef, useState} from "react";
-import ChatHeader from "./ChatHeader";
-import MessageBubble from "./MessageBubble";
-import ChatInput from "./ChatInput";
-import styles from "./ChatWindow.module.css";
-import {useAppDispatch, useAppSelector} from "../../../../hooks/hooks";
-import {
-    getPeopleMessages,
-    getRoomMessages,
-    selectActiveRoom,
-    selectActiveRoomMessages,
-    selectChatError, selectChatLoading,
-    selectCurrentPage,
-    selectHasMoreMessages, sendChatMessage
-} from "../../chatSlice";
-import {selectIsConnected} from "../../../connection/connectionSlice";
+import React from 'react';
+import ChatHeader from './ChatHeader';
+import MessageBubble from './MessageBubble';
+import ChatInput from './ChatInput';
+import styles from './ChatWindow.module.css';
+import { Room, Message } from '../../../../types/chat';
+import { User } from '../../../../types/user';
 
-const ChatWindow: React.FC = () => {
-    const dispatch = useAppDispatch();
-    const chatBodyRef = useRef<HTMLDivElement>(null);
+/**
+ * VIEW (Presentational Component)
+ * Chỉ nhận props và render UI
+ * KHÔNG có logic, KHÔNG gọi Redux
+ */
+interface ChatWindowViewProps {
+    // Data
+    activeRoom: Room | null;
+    messages: Message[];
+    currentUser: User | null;
 
-    // ② ĐỌC state từ chatSlice
-    const messages = useAppSelector(selectActiveRoomMessages);
-    const activeRoom = useAppSelector(selectActiveRoom);
-    const loading = useAppSelector(selectChatLoading);
-    const error = useAppSelector(selectChatError);
-    const currentPage = useAppSelector(selectCurrentPage);
-    const hasMoreMessages = useAppSelector(selectHasMoreMessages);
+    // States
+    loading: boolean;
+    error: string | null;
+    isConnected: boolean;
+    hasMoreMessages: boolean;
 
-    // ② ĐỌC state từ connectionSlice
-    const isConnected = useAppSelector(selectIsConnected);
+    // Handlers
+    onSendMessage: (text: string) => void;
+    onLoadMore: () => void;
 
-    // ② ĐỌC user từ authSlice
-    const currentUser = useAppSelector((state) => state.auth.user);
+    // Refs
+    chatBodyRef: React.RefObject<HTMLDivElement>;
+}
 
-    // Auto scroll to bottom when new messages arrive
-    useEffect(() => {
-        if (chatBodyRef.current) {
-            chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-        }
-    }, [messages]);
-
-    // ① GỬI tin nhắn
-    const handleSendMessage = async (text: string) => {
-        if (!activeRoom || !isConnected) {
-            console.error('Cannot send message: no active room or not connected');
-            return;
-        }
-
-        try {
-            await dispatch(sendChatMessage({
-                type: activeRoom.type === 'group' ? 'room' : 'people',
-                to: activeRoom.name,
-                mes: text
-            }));
-        } catch (error) {
-            console.error('Failed to send message:', error);
-        }
-    };
-
-    // ① LOAD more messages (pagination)
-    const handleLoadMore = async () => {
-        if (!activeRoom || !hasMoreMessages || loading) return;
-
-        const nextPage = currentPage + 1;
-
-        if (activeRoom.type === 'group') {
-            await dispatch(getRoomMessages({
-                roomName: activeRoom.name,
-                page: nextPage
-            }));
-        } else {
-            await dispatch(getPeopleMessages({
-                userName: activeRoom.name,
-                page: nextPage
-            }));
-        }
-    };
-
+const ChatWindowView: React.FC<ChatWindowViewProps> = ({
+                                                           activeRoom,
+                                                           messages,
+                                                           currentUser,
+                                                           loading,
+                                                           error,
+                                                           isConnected,
+                                                           hasMoreMessages,
+                                                           onSendMessage,
+                                                           onLoadMore,
+                                                           chatBodyRef
+                                                       }) => {
+    // ========== RENDER: Empty State ==========
     if (!activeRoom) {
         return (
             <div className={styles.chatPanel}>
@@ -93,6 +60,7 @@ const ChatWindow: React.FC = () => {
         );
     }
 
+    // ========== RENDER: Main Chat ==========
     return (
         <div className={styles.chatPanel}>
             {/* Header */}
@@ -115,7 +83,7 @@ const ChatWindow: React.FC = () => {
                         textAlign: 'center',
                         color: '#856404'
                     }}>
-                            Disconnected. Trying to reconnect...
+                        Disconnected. Trying to reconnect...
                     </div>
                 )}
 
@@ -129,7 +97,7 @@ const ChatWindow: React.FC = () => {
                         textAlign: 'center',
                         color: '#721c24'
                     }}>
-                            {error}
+                        {error}
                     </div>
                 )}
 
@@ -137,7 +105,7 @@ const ChatWindow: React.FC = () => {
                 {hasMoreMessages && messages.length > 0 && (
                     <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                         <button
-                            onClick={handleLoadMore}
+                            onClick={onLoadMore}
                             disabled={loading}
                             style={{
                                 padding: '8px 16px',
@@ -180,11 +148,11 @@ const ChatWindow: React.FC = () => {
 
             {/* Footer */}
             <ChatInput
-                onSendMessage={handleSendMessage}
+                onSendMessage={onSendMessage}
                 disabled={!isConnected}
             />
         </div>
     );
 };
 
-export default ChatWindow;
+export default ChatWindowView;

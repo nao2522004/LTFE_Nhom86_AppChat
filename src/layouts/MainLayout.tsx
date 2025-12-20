@@ -4,7 +4,7 @@ import { useAppSelector } from "../hooks/hooks";
 import { selectConnectionStatus } from "../features/connection/connectionSlice";
 import styles from "./MainLayout.module.css";
 import Sidebar from "../components/Sidebar";
-import SocketIndicator from "../components/SocketIndicator/SocketIndicator";
+import SocketIndicatorContainer from "../features/connection/containers/SocketIndicatorContainer";
 
 const MainLayout: React.FC = () => {
     const connectionStatus = useAppSelector(selectConnectionStatus);
@@ -45,7 +45,7 @@ const MainLayout: React.FC = () => {
                     right: '20px',
                     zIndex: 100
                 }}>
-                    <SocketIndicator />
+                    <SocketIndicatorContainer />
                 </div>
 
                 <Outlet />
