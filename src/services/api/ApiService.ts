@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { API_BASE_URL } from '../../constants/api';
+import { API_BASE_URL } from '../../shared/constants/api';
 
 class ApiService {
     private api: AxiosInstance;

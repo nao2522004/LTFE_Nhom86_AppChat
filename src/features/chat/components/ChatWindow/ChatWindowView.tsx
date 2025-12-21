@@ -3,8 +3,8 @@ import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import styles from './ChatWindow.module.css';
-import { Room, Message } from '../../../../types/chat';
-import { User } from '../../../../types/user';
+import { Room, Message } from '../../../../shared/types/chat';
+import { User } from '../../../../shared/types/user';
 
 /**
  * VIEW (Presentational Component)

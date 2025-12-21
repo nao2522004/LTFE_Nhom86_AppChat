@@ -2,7 +2,7 @@ import React from 'react';
 import ConversationItem from './ConversationItem';
 import SearchBox from './SearchBox';
 import styles from './ConversationList.module.css';
-import { Room } from '../../../../types/chat';
+import { Room } from '../../../../shared/types/chat';
 
 /**
  * VIEW

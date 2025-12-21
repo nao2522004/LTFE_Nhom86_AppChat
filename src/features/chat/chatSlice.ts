@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {Message, Room} from "../../types/chat";
-import { chatAPI } from './services/chatAPI';
+import {Message, Room} from "../../shared/types/chat";
+import websocketService from "../../services/websocket/MainService";
 
 interface ChatState {
     messages: Message[];
@@ -38,7 +38,7 @@ export const createRoom = createAsyncThunk(
     'chat/createRoom',
     async (roomName: string, { rejectWithValue }) => {
         try {
-            const response = await chatAPI.createRoom(roomName);
+            const response = await websocketService.createRoom(roomName);
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to create room');
@@ -54,7 +54,7 @@ export const joinRoom = createAsyncThunk(
     'chat/joinRoom',
     async (roomName: string, { rejectWithValue }) => {
         try {
-            const response = await chatAPI.joinRoom(roomName);
+            const response = await websocketService.joinRoom(roomName);
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to join room');
@@ -70,7 +70,7 @@ export const getRoomMessages = createAsyncThunk(
     'chat/getRoomMessages',
     async ({ roomName, page }: { roomName: string; page: number }, { rejectWithValue }) => {
         try {
-            const response = await chatAPI.getRoomMessages({ roomName, page });
+            const response = await websocketService.getRoomMessages({ roomName, page });
             return { roomName, messages: response.messages || [], page };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get room messages');
@@ -86,7 +86,7 @@ export const getPeopleMessages = createAsyncThunk(
     'chat/getPeopleMessages',
     async ({ userName, page }: { userName: string; page: number }, { rejectWithValue }) => {
         try {
-            const response = await chatAPI.getPeopleMessages({ userName, page });
+            const response = await websocketService.getPeopleMessages({ userName, page });
             return { userName, messages: response.messages || [], page };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get people messages');
@@ -105,7 +105,7 @@ export const sendChatMessage = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            await chatAPI.sendMessage({ type, to, mes });
+            await websocketService.sendChat({ type, to, mes });
             return { type, to, mes, timestamp: new Date() };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to send message');
@@ -121,7 +121,7 @@ export const checkUser = createAsyncThunk(
     'chat/checkUser',
     async (username: string, { rejectWithValue }) => {
         try {
-            const response = await chatAPI.checkUser(username);
+            const response = await websocketService.checkUser(username);
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to check user');
@@ -136,7 +136,7 @@ export const getUserList = createAsyncThunk(
     'chat/getUserList',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await chatAPI.getUserList();
+            const response = await websocketService.getUserList();
             return response.users || [];
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get user list');

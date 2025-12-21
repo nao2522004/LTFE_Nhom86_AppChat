@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./ChatWindow.module.css";
-import {MessageStatus} from "../../../../types/chat";
+import {MessageStatus} from "../../../../shared/types/chat";
 
 interface MessageProps {
     text: string;

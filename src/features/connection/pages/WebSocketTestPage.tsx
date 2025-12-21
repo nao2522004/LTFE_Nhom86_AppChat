@@ -1,8 +1,8 @@
 import React from 'react';
-import WebSocketTest from '../components/WebSocketTest/WebSocketTest';
-import { useAppDispatch, useAppSelector } from '../hooks/hooks';
-import { logout } from '../features/auth/authSlice';
-import SocketIndicatorContainer from '../features/connection/containers/SocketIndicatorContainer';
+import WebSocketTest from '../../../components/WebSocketTest/WebSocketTest';
+import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
+import { logout } from '../../auth/authSlice';
+import SocketIndicatorContainer from '../containers/SocketIndicatorContainer';
 
 const WebSocketTestPage: React.FC = () => {
     const dispatch = useAppDispatch();

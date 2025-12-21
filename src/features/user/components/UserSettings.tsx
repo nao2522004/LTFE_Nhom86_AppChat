@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './UserSettings.module.css';
-import { UserSettings as IUserSettings } from '../../../types/user';
+import { UserSettings as IUserSettings } from '../../../shared/types/user';
 
 interface UserSettingsProps {
     settings: IUserSettings;
