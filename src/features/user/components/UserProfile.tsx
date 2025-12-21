@@ -8,7 +8,7 @@ interface UserProfileProps {
     onEdit?: () => void;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ user, isEditable = false, onEdit }) => {
+const UserProfile: React.FC = () => {
     return (
         <section className="profile-container">
             <div className="banner">
