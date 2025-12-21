@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import LoginForm from '../features/auth/components/LoginForm';
-import RegisterForm from '../features/auth/components/RegisterForm';
+import LoginForm from '../components/LoginForm';
+import RegisterForm from '../components/RegisterForm';
 
 const AuthPage: React.FC = () => {
     const [searchParams] = useSearchParams();

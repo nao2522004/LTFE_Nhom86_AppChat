@@ -1,8 +1,8 @@
 import React, {useEffect} from "react";
-import {useAppDispatch, useAppSelector} from "../hooks/hooks";
-import {getUserList} from "../features/chat/chatSlice";
-import ConversationListContainer from "../features/chat/containers/ConversationListContainer";
-import ChatWindowContainer from "../features/chat/containers/ChatWindowContainer";
+import {useAppDispatch, useAppSelector} from "../../../hooks/hooks";
+import {getUserList} from "../chatSlice";
+import ConversationListContainer from "../containers/ConversationListContainer";
+import ChatWindowContainer from "../containers/ChatWindowContainer";
 
 /**
  * PAGE

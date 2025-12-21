@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './UserProfile.module.css';
-import { User } from '../../../types/user';
+import { User } from '../../../shared/types/user';
 
 interface UserProfileProps {
     user: User;

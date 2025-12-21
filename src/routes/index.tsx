@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks/hooks';
-import AuthPage from '../pages/AuthPage';
-import WebSocketTestPage from '../pages/WebSocketTestPage';
+import AuthPage from '../features/auth/pages/AuthPage';
+import WebSocketTestPage from '../features/connection/pages/WebSocketTestPage';
 import MainLayout from '../layouts/MainLayout';
-import ChatPage from '../pages/ChatPage';
+import ChatPage from '../features/chat/pages/ChatPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
