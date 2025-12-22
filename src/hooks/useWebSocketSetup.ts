@@ -78,7 +78,9 @@ export const useWebSocketSetup = () => {
                         avatar: message.data.from?.avatar
                     },
                     roomId: message.data.to || message.data.roomId,
-                    timestamp: new Date(message.data.timestamp || Date.now()),
+                    timestamp: message.data.timestamp
+                        ? new Date(message.data.timestamp).toISOString()
+                        : new Date().toISOString(),
                     status: 'sent' as const,
                     type: 'text' as const
                 };
