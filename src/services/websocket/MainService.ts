@@ -21,9 +21,8 @@ const userService = new UserService(connection);
 // ===== WEBSOCKET SERVICE FACADE =====
 // Đây là interface duy nhất mà app sẽ dùng
 class WebSocketService {
-    send = (data: any) => connection.send(data);
-
     // Connection methods
+    send = (data: any) => connection.send(data);
     connect = () => connection.connect();
     disconnect = () => connection.disconnect();
     isConnected = () => connection.isConnected();
@@ -51,7 +50,6 @@ class WebSocketService {
     getUserList = () => userService.getUserList();
 }
 
-// Export singleton instance
 const websocketService = new WebSocketService();
 export default websocketService;
 

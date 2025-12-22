@@ -1,14 +1,11 @@
+import { User } from './user';
+
 export interface Message {
     id: string;
     content: string;
-    sender: {
-        id: string;
-        username: string;
-        displayName?: string;
-        avatar?: string;
-    };
+    sender: Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>;
     roomId: string;
-    timestamp: Date;
+    timestamp: string;
     status: MessageStatus;
     type: MessageType;
 }
@@ -23,8 +20,8 @@ export interface Room {
     participants: string[];
     lastMessage?: Message;
     unreadCount: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export type RoomType = 'private' | 'group';

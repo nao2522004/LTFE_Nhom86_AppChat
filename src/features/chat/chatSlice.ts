@@ -6,7 +6,7 @@ interface ChatState {
     messages: Message[];
     rooms: Room[];
     activeRoomId: string | null;
-    subscribedChannels: string[]; // quan ly kenh theo doi de nhan tin nhan
+    activeRoomIds: string[];
     loading: boolean;
     error: string | null;
     sendingMessages: string[];
@@ -20,7 +20,7 @@ const initialState: ChatState = {
     messages: [],
     rooms: [],
     activeRoomId: null,
-    subscribedChannels: [],
+    activeRoomIds: [],
     loading: false,
     error: null,
     sendingMessages: [],
@@ -36,7 +36,7 @@ const initialState: ChatState = {
  */
 export const createRoom = createAsyncThunk(
     'chat/createRoom',
-    async (roomName: string, { rejectWithValue }) => {
+    async (roomName: string, {rejectWithValue}) => {
         try {
             const response = await websocketService.createRoom(roomName);
             return response;
@@ -52,7 +52,7 @@ export const createRoom = createAsyncThunk(
  */
 export const joinRoom = createAsyncThunk(
     'chat/joinRoom',
-    async (roomName: string, { rejectWithValue }) => {
+    async (roomName: string, {rejectWithValue}) => {
         try {
             const response = await websocketService.joinRoom(roomName);
             return response;
@@ -68,10 +68,10 @@ export const joinRoom = createAsyncThunk(
  */
 export const getRoomMessages = createAsyncThunk(
     'chat/getRoomMessages',
-    async ({ roomName, page }: { roomName: string; page: number }, { rejectWithValue }) => {
+    async ({roomName, page}: { roomName: string; page: number }, {rejectWithValue}) => {
         try {
-            const response = await websocketService.getRoomMessages({ roomName, page });
-            return { roomName, messages: response.messages || [], page };
+            const response = await websocketService.getRoomMessages({roomName, page});
+            return {roomName, messages: response.messages || [], page};
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get room messages');
         }
@@ -84,10 +84,10 @@ export const getRoomMessages = createAsyncThunk(
  */
 export const getPeopleMessages = createAsyncThunk(
     'chat/getPeopleMessages',
-    async ({ userName, page }: { userName: string; page: number }, { rejectWithValue }) => {
+    async ({userName, page}: { userName: string; page: number }, {rejectWithValue}) => {
         try {
-            const response = await websocketService.getPeopleMessages({ userName, page });
-            return { userName, messages: response.messages || [], page };
+            const response = await websocketService.getPeopleMessages({userName, page});
+            return {userName, messages: response.messages || [], page};
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get people messages');
         }
@@ -101,12 +101,12 @@ export const getPeopleMessages = createAsyncThunk(
 export const sendChatMessage = createAsyncThunk(
     'chat/sendMessage',
     async (
-        { type, to, mes }: { type: 'room' | 'people'; to: string; mes: string },
-        { rejectWithValue }
+        {type, to, mes}: { type: 'room' | 'people'; to: string; mes: string },
+        {rejectWithValue}
     ) => {
         try {
-            await websocketService.sendChat({ type, to, mes });
-            return { type, to, mes, timestamp: new Date() };
+            await websocketService.sendChat({type, to, mes});
+            return {type, to, mes, timestamp: new Date().toISOString()};
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to send message');
         }
@@ -119,7 +119,7 @@ export const sendChatMessage = createAsyncThunk(
  */
 export const checkUser = createAsyncThunk(
     'chat/checkUser',
-    async (username: string, { rejectWithValue }) => {
+    async (username: string, {rejectWithValue}) => {
         try {
             const response = await websocketService.checkUser(username);
             return response;
@@ -134,7 +134,7 @@ export const checkUser = createAsyncThunk(
  */
 export const getUserList = createAsyncThunk(
     'chat/getUserList',
-    async (_, { rejectWithValue }) => {
+    async (_, {rejectWithValue}) => {
         try {
             const response = await websocketService.getUserList();
             return response.users || [];
@@ -155,7 +155,7 @@ const chatSlice = createSlice({
             if (!exists) {
                 state.messages.push(action.payload);
                 state.messages.sort((a, b) =>
-                    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                    a.timestamp.localeCompare(b.timestamp)
                 );
             }
         },
@@ -180,7 +180,7 @@ const chatSlice = createSlice({
 
         setMessages: (state, action: PayloadAction<Message[]>) => {
             state.messages = action.payload.sort((a, b) =>
-                new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                a.timestamp.localeCompare(b.timestamp)
             );
         },
 
@@ -249,21 +249,21 @@ const chatSlice = createSlice({
             }
         },
 
-        // ===== SUBSCRIPTIONS =====
-        subscribeChannel: (state, action: PayloadAction<string>) => {
-            if (!state.subscribedChannels.includes(action.payload)) {
-                state.subscribedChannels.push(action.payload);
+        // ===== ACTIVE ROOM IDS =====
+        addActiveRoom: (state, action: PayloadAction<string>) => {
+            if (!state.activeRoomIds.includes(action.payload)) {
+                state.activeRoomIds.push(action.payload);
             }
         },
 
-        unsubscribeChannel: (state, action: PayloadAction<string>) => {
-            state.subscribedChannels = state.subscribedChannels.filter(
-                ch => ch !== action.payload
+        removeActiveRoom: (state, action: PayloadAction<string>) => {
+            state.activeRoomIds = state.activeRoomIds.filter(
+                id => id !== action.payload
             );
         },
 
-        setSubscribedChannels: (state, action: PayloadAction<string[]>) => {
-            state.subscribedChannels = action.payload;
+        setActiveRoomIds: (state, action: PayloadAction<string[]>) => {
+            state.activeRoomIds = action.payload;
         },
 
         // ===== LOADING & ERROR =====
@@ -293,7 +293,7 @@ const chatSlice = createSlice({
             state.messages = [];
             state.rooms = [];
             state.activeRoomId = null;
-            state.subscribedChannels = [];
+            state.activeRoomIds = [];
             state.loading = false;
             state.error = null;
             state.sendingMessages = [];
@@ -302,6 +302,8 @@ const chatSlice = createSlice({
             state.userList = [];
         }
     },
+
+    // =============== ExtraReducer For API =================
     extraReducers: (builder) => {
         // ===== CREATE ROOM =====
         builder
@@ -334,8 +336,8 @@ const chatSlice = createSlice({
                 state.loading = false;
                 // Subscribe to room after joining
                 if (action.payload.roomName) {
-                    if (!state.subscribedChannels.includes(action.payload.roomName)) {
-                        state.subscribedChannels.push(action.payload.roomName);
+                    if (!state.activeRoomIds.includes(action.payload.roomName)) {
+                        state.activeRoomIds.push(action.payload.roomName);
                     }
                 }
             })
@@ -352,7 +354,7 @@ const chatSlice = createSlice({
             })
             .addCase(getRoomMessages.fulfilled, (state, action) => {
                 state.loading = false;
-                const { messages, page } = action.payload;
+                const {messages, page} = action.payload;
 
                 if (page === 1) {
                     // Replace messages if page 1
@@ -381,7 +383,7 @@ const chatSlice = createSlice({
             })
             .addCase(getPeopleMessages.fulfilled, (state, action) => {
                 state.loading = false;
-                const { messages, page } = action.payload;
+                const {messages, page} = action.payload;
 
                 if (page === 1) {
                     state.messages = messages;
@@ -461,9 +463,9 @@ export const {
     setRooms,
     setActiveRoom,
     incrementUnreadCount,
-    subscribeChannel,
-    unsubscribeChannel,
-    setSubscribedChannels,
+    addActiveRoom,
+    removeActiveRoom,
+    setActiveRoomIds,
     setLoading,
     setError,
     clearError,
@@ -476,7 +478,7 @@ export const {
 export const selectMessages = (state: { chat: ChatState }) => state.chat.messages;
 export const selectRooms = (state: { chat: ChatState }) => state.chat.rooms;
 export const selectActiveRoomId = (state: { chat: ChatState }) => state.chat.activeRoomId;
-export const selectSubscribedChannels = (state: { chat: ChatState }) => state.chat.subscribedChannels;
+export const selectSubscribedChannels = (state: { chat: ChatState }) => state.chat.activeRoomIds;
 export const selectChatLoading = (state: { chat: ChatState }) => state.chat.loading;
 export const selectChatError = (state: { chat: ChatState }) => state.chat.error;
 export const selectUserList = (state: { chat: ChatState }) => state.chat.userList;
@@ -490,13 +492,13 @@ export const selectIsMessageSending = (messageId: string) => (state: { chat: Cha
 
 // Advanced selectors
 export const selectActiveRoomMessages = (state: { chat: ChatState }) => {
-    const { messages, activeRoomId } = state.chat;
+    const {messages, activeRoomId} = state.chat;
     if (!activeRoomId) return [];
     return messages.filter(m => m.roomId === activeRoomId);
 };
 
 export const selectActiveRoom = (state: { chat: ChatState }) => {
-    const { rooms, activeRoomId } = state.chat;
+    const {rooms, activeRoomId} = state.chat;
     if (!activeRoomId) return null;
     return rooms.find(r => r.id === activeRoomId) || null;
 };
@@ -505,8 +507,8 @@ export const selectTotalUnreadCount = (state: { chat: ChatState }) => {
     return state.chat.rooms.reduce((total, room) => total + room.unreadCount, 0);
 };
 
-export const selectIsSubscribed = (channelId: string) => (state: { chat: ChatState }) => {
-    return state.chat.subscribedChannels.includes(channelId);
+export const selectIsRoomActive = (roomId: string) => (state: { chat: ChatState }) => {
+    return state.chat.activeRoomIds.includes(roomId);
 };
 
 export default chatSlice.reducer;
