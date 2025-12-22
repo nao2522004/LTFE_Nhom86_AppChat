@@ -302,6 +302,8 @@ const chatSlice = createSlice({
             state.userList = [];
         }
     },
+
+    // =============== ExtraReducer For API =================
     extraReducers: (builder) => {
         // ===== CREATE ROOM =====
         builder
