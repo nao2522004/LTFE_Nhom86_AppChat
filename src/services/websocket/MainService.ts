@@ -5,7 +5,7 @@ import { UserService } from './UserService';
 
 const WS_URL = process.env.REACT_APP_SOCKET_URL || 'wss://chat.longapp.site/chat/chat';
 
-// Tạo connection duy nhất
+// Tạo connectionSocket duy nhất
 const connection = new WebSocketConnection(WS_URL, {
     maxAttempts: 5,
     initialDelay: 1000,
@@ -13,7 +13,7 @@ const connection = new WebSocketConnection(WS_URL, {
     backoffFactor: 2
 });
 
-// Tạo các service dùng chung connection
+// Tạo các service dùng chung connectionSocket
 const authService = new AuthService(connection);
 const chatService = new ChatService(connection);
 const userService = new UserService(connection);

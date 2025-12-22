@@ -1,0 +1,69 @@
+.indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #82e0aa;
+    border-color: rgba(130, 224, 170, 0.2);
+}
+
+.reconnecting, .disconnected {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffca28;
+    border-color: rgba(255, 202, 40, 0.2);
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.connected .dot {
+    background: #82e0aa;
+    box-shadow: 0 0 8px #82e0aa;
+}
+
+.connected .dot::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    border-radius: inherit;
+    animation: ripple 2s infinite;
+}
+
+.reconnecting .dot {
+    background: #ffca28;
+    animation: blink 1s infinite;
+}
+
+.text {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+@keyframes ripple {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(3); opacity: 0; }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}

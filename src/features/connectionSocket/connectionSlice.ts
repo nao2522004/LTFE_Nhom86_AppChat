@@ -8,8 +8,8 @@ interface ConnectionState {
     error: string | null;
     reconnectAttempts: number;
     maxReconnectAttempts: number;
-    lastConnected: Date | null;
-    lastDisconnected: Date | null;
+    lastConnected: String | null;
+    lastDisconnected: String | null;
     isManualDisconnect: boolean;
 }
 
@@ -39,13 +39,13 @@ const connectionSlice = createSlice({
             state.status = 'connected';
             state.error = null;
             state.reconnectAttempts = 0;
-            state.lastConnected = new Date();
+            state.lastConnected = new Date().toISOString();;
             state.isManualDisconnect = false;
         },
 
         setDisconnected: (state, action: PayloadAction<{ isManual?: boolean; error?: string }>) => {
             state.status = 'disconnected';
-            state.lastDisconnected = new Date();
+            state.lastDisconnected = new Date().toISOString();;
             state.isManualDisconnect = action.payload.isManual || false;
 
             if (action.payload.error) {

@@ -1,0 +1,101 @@
+/* SocketStatusBar.module.css */
+.container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    pointer-events: auto; /* Đảm bảo click được */
+}
+
+.capsule {
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 6px 16px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 250px;
+}
+
+.errorMode {
+    border-color: rgba(255, 77, 79, 0.4);
+}
+
+.warningMode {
+    border-color: rgba(255, 193, 7, 0.4);
+}
+
+.mainInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    height: 32px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.pulse {
+    background: #ffc107;
+    box-shadow: 0 0 10px #ffc107;
+    animation: statusPulse 1.5s infinite ease-in-out;
+}
+
+.dead {
+    background: #ff4d4f;
+    box-shadow: 0 0 10px #ff4d4f;
+}
+
+.message {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.chevron {
+    font-size: 10px;
+    opacity: 0.5;
+    margin-left: auto; /* Đẩy chevron về bên phải */
+}
+
+.expandContent {
+    margin-top: 10px;
+    padding: 12px 0 6px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.helpText {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.reloadBtn {
+    width: 100%;
+    background: #254e42;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.reloadBtn:hover {
+    background: #2d5e50;
+}
+
+@keyframes statusPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.6; }
+}

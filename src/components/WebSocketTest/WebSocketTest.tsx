@@ -83,7 +83,7 @@ const WebSocketTest: React.FC = () => {
             websocketService.off('error', handleError);
             websocketService.off('message', handleMessage);
             
-            // Note: We don't disconnect here to maintain connection
+            // Note: We don't disconnect here to maintain connectionSocket
         };
     }, [isAuthenticated]);
 

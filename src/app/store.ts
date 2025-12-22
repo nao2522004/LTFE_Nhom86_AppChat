@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import userReducer from '../features/user/userSlice';
 import authReducer from '../features/auth/authSlice';
 import chatReducer from '../features/chat/chatSlice';
-import connectionReducer from '../features/connection/connectionSlice';
+import connectionReducer from '../features/connectionSocket/connectionSlice';
 
 // ===== CONFIGURE STORE =====
 export const store = configureStore({
@@ -19,16 +19,16 @@ export const store = configureStore({
                 ignoredActions: [
                     'chat/addMessage',
                     'chat/setMessages',
-                    'connection/setConnected',
-                    'connection/setDisconnected'
+                    'connectionSocket/setConnected',
+                    'connectionSocket/setDisconnected'
                 ],
                 // Ignore these field paths in all actions
                 ignoredActionPaths: ['payload.timestamp', 'payload.lastConnected', 'payload.lastDisconnected'],
                 // Ignore these paths in the state
                 ignoredPaths: [
                     'chat.messages',
-                    'connection.lastConnected',
-                    'connection.lastDisconnected'
+                    'connectionSocket.lastConnected',
+                    'connectionSocket.lastDisconnected'
                 ],
             },
         }),
