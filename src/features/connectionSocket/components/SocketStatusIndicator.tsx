@@ -1,23 +1,13 @@
 import React from 'react';
-import { useAppSelector } from '../../../hooks/hooks';
-import {
-    selectConnectionStatus,
-    selectReconnectAttempts,
-    selectMaxReconnectAttempts
-} from '../connectionSlice';
-import SocketIndicatorView from '../components/SocketIndicatorView';
+import styles from './SocketIndicator.module.css';
+import {useAppSelector} from "../../../hooks/hooks";
+import {selectConnectionStatus, selectMaxReconnectAttempts, selectReconnectAttempts} from "../connectionSlice";
 
-/**
- * CONTROLLER
- * Đọc state từ Redux và truyền xuống View
- */
-const SocketIndicatorContainer: React.FC = () => {
-    // ========== SELECTORS (Đọc từ MODEL) ==========
+const SocketStatusIndicator: React.FC = () => {
     const status = useAppSelector(selectConnectionStatus);
     const reconnectAttempts = useAppSelector(selectReconnectAttempts);
     const maxAttempts = useAppSelector(selectMaxReconnectAttempts);
 
-    // ========== COMPUTED VALUES (CONTROLLER LOGIC) ==========
     const getStatusText = () => {
         switch (status) {
             case 'connected':
@@ -39,13 +29,12 @@ const SocketIndicatorContainer: React.FC = () => {
         return 'disconnected';
     };
 
-    // ========== RENDER VIEW ==========
     return (
-        <SocketIndicatorView
-            statusText={getStatusText()}
-            statusClass={getStatusClass()}
-        />
+        <div className={`${styles.indicator} ${styles[getStatusClass()]}`}>
+            <span className={styles.dot}/>
+            <span className={styles.text}>{getStatusText()}</span>
+        </div>
     );
 };
 
-export default SocketIndicatorContainer;
+export default SocketStatusIndicator;

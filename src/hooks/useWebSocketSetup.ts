@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import {useEffect, useRef} from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { setWsConnected } from '../features/auth/authSlice';
 import {
@@ -8,28 +8,36 @@ import {
     incrementReconnectAttempts,
     resetReconnectAttempts,
     setConnectionError
-} from '../features/connection/connectionSlice';
-import { addMessage, addRoom } from '../features/chat/chatSlice';
+} from '../features/connectionSocket/connectionSlice';
+import {addMessage, addRoom, getUserList} from '../features/chat/chatSlice';
 import websocketService from "../services/websocket/MainService";
 
 /**
  * Hook để setup WebSocket event listeners
- * Chỉ gọi 1 lần ở App.tsx hoặc MainLayout.tsx
+ * Chỉ gọi 1 lần ở App.tsx
  */
 export const useWebSocketSetup = () => {
     const dispatch = useAppDispatch();
     const { isAuthenticated } = useAppSelector((state) => state.auth);
 
+    // Track if user list has been loaded
+    const userListLoadedRef = useRef(false);
+
     useEffect(() => {
         if (!isAuthenticated) return;
-
-        // ===== CONNECTION EVENTS =====
 
         const handleOpen = () => {
             console.log('WebSocket Connected');
             dispatch(setWsConnected(true));
             dispatch(setConnected());
             dispatch(resetReconnectAttempts());
+
+            // Load user list ONLY ONCE when connected
+            if (!userListLoadedRef.current) {
+                console.log('Loading user list on first connectionSocket...');
+                dispatch(getUserList());
+                userListLoadedRef.current = true;
+            }
         };
 
         const handleClose = (data: any) => {
@@ -164,6 +172,8 @@ export const useWebSocketSetup = () => {
             websocketService.off('USER_OFFLINE', handleUserOffline);
 
             websocketService.off('message');
+
+            userListLoadedRef.current = false;
         };
     }, [dispatch, isAuthenticated]);
 };

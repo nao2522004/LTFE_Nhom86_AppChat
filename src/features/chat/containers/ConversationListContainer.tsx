@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import {
     setActiveRoom,
     getRoomMessages,
     getPeopleMessages,
-    getUserList,
     selectRooms,
     selectActiveRoomId,
     selectUserList,
@@ -19,18 +18,10 @@ import ConversationListView from '../components/ConversationList/ConversationLis
 const ConversationListContainer: React.FC = () => {
     const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
-
-    // ========== SELECTORS ==========
     const rooms = useAppSelector(selectRooms);
     const activeRoomId = useAppSelector(selectActiveRoomId);
     const userList = useAppSelector(selectUserList);
     const loading = useAppSelector(selectChatLoading);
-
-    // ========== EFFECTS ==========
-    // Load user list khi mount
-    useEffect(() => {
-        dispatch(getUserList());
-    }, [dispatch]);
 
     // ========== EVENT HANDLERS ==========
     const handleSelectConversation = useCallback(async (
@@ -55,11 +46,15 @@ const ConversationListContainer: React.FC = () => {
 
     // ========== FILTER DATA ==========
     const filteredRooms = rooms.filter(room =>
-        room.name.toLowerCase().includes(searchQuery.toLowerCase())
+        rooms.filter(room =>
+            room.name.toLowerCase().includes(searchQuery.toLowerCase())
+        ), [rooms, searchQuery]
     );
 
     const filteredUsers = userList.filter((user: any) =>
-        user.username?.toLowerCase().includes(searchQuery.toLowerCase())
+        userList.filter((user: any) =>
+            user.username?.toLowerCase().includes(searchQuery.toLowerCase())
+        ), [userList, searchQuery]
     );
 
     // ========== RENDER VIEW ==========

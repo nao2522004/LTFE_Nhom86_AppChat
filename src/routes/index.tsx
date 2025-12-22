@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks/hooks';
 import AuthPage from '../features/auth/pages/AuthPage';
-import WebSocketTestPage from '../features/connection/pages/WebSocketTestPage';
+import WebSocketTestPage from '../features/connectionSocket/pages/WebSocketTestPage';
 import MainLayout from '../layouts/MainLayout';
 import ChatPage from '../features/chat/pages/ChatPage';
 
