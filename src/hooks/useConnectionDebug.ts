@@ -1,30 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppSelector } from './hooks';
-import { selectConnectionStatus, selectReconnectAttempts } from '../features/connectionSocket/connectionSlice';
+import { selectConnectionStatus } from '../features/connectionSocket/connectionSlice';
 
-/**
- * Debug hook để log connection state changes
- * Chỉ dùng trong development
- */
 export const useConnectionDebug = () => {
     const status = useAppSelector(selectConnectionStatus);
-    const attempts = useAppSelector(selectReconnectAttempts);
-    const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+    const prevStatusRef = useRef(status);
 
     useEffect(() => {
-        const logStyle = 'color: white; background: #2563eb; padding: 4px 8px; border-radius: 4px; font-weight: bold';
-
-        console.log(
-            '%c[CONNECTION DEBUG]',
-            logStyle,
-            {
-                status,
-                attempts,
-                isAuthenticated,
-                timestamp: new Date().toISOString()
-            }
-        );
-    }, [status, attempts, isAuthenticated]);
+        if (prevStatusRef.current !== status) {
+            console.log(
+                '%c[CONNECTION STATE CHANGE]',
+                'color: white; background: #e74c3c; padding: 4px 8px; border-radius: 4px; font-weight: bold',
+                {
+                    from: prevStatusRef.current,
+                    to: status,
+                    timestamp: new Date().toISOString(),
+                    stackTrace: new Error().stack // 🔥 Show where state changed
+                }
+            );
+            prevStatusRef.current = status;
+        }
+    }, [status]);
 };
 
 export default useConnectionDebug;

@@ -27,14 +27,48 @@ function App() {
             const token = localStorage.getItem("token");
             const user = localStorage.getItem("user");
 
+            console.log('%c[App] Checking auth...',
+                'background: #3498db; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
+                { token: token ? '✓ exists' : '✗ missing', user: user ? '✓ exists' : '✗ missing' }
+            );
+
             if (token && user) {
                 try {
+                    console.log('%c[App] Token found, attempting reLogin...',
+                        'background: #f39c12; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
+                        { user, token: token.substring(0, 20) + '...' }
+                    );
+
                     dispatch(setConnecting());
-                    await dispatch(reLogin({user: user, code: token}));
+
+                    const result = await dispatch(reLogin({user: user, code: token}));
+
+                    console.log('%c[App] reLogin result:',
+                        'background: #2ecc71; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
+                        result
+                    );
+
+                    // Check if reLogin failed
+                    if (reLogin.rejected.match(result)) {
+                        console.error('%c[App] reLogin rejected, clearing storage',
+                            'background: #e74c3c; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold'
+                        );
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                    }
+
                 } catch (error: any) {
+                    console.error('%c[App] reLogin error:',
+                        'background: #e74c3c; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
+                        error
+                    );
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                 }
+            } else {
+                console.log('%c[App] No token found, skipping reLogin',
+                    'background: #95a5a6; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold'
+                );
             }
 
             setIsCheckingAuth(false);

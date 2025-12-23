@@ -31,23 +31,53 @@ export class WebSocketConnection {
     // ===== KẾT NỐI =====
     connect(): WebSocket {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            console.log('WebSocket đã kết nối');
+            console.log('%c[WebSocket] Already connected, triggering open event',
+                'background: #2ecc71; color: white; padding: 2px 6px; border-radius: 3px;'
+            );
+
+            // Trigger open handler asynchronously
+            setTimeout(() => {
+                this.triggerHandlers('open', {
+                    connected: true,
+                    alreadyConnected: true
+                });
+            }, 0);
+
             return this.ws;
         }
+
+        if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
+            console.log('%c[WebSocket] Already connecting, waiting...',
+                'background: #3498db; color: white; padding: 2px 6px; border-radius: 3px;'
+            );
+            return this.ws;
+        }
+
+        console.log('%c[WebSocket] Creating new connection...',
+            'background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px;'
+        );
 
         this.isManualClose = false;
         this.ws = new WebSocket(this.url);
 
         this.ws.onopen = () => {
-            console.log('WebSocket Connected');
+            console.log('%c[WebSocket] onopen fired',
+                'background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px;'
+            );
             this.reconnectAttempts = 0;
-            this.triggerHandlers('open', { connected: true });
+            this.triggerHandlers('open', {
+                connected: true,
+                timestamp: new Date().toISOString()
+            });
         };
 
         this.ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
-                console.log('Received:', message);
+                console.log('%c[WebSocket] Message received',
+                    'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
+                    message
+                );
 
                 if (message.event) {
                     this.triggerHandlers(message.event, message);
@@ -55,21 +85,34 @@ export class WebSocketConnection {
 
                 this.triggerHandlers('message', message);
             } catch (error) {
-                console.error('Parse error:', error);
+                console.error('[WebSocket] Parse error:', error);
             }
         };
 
         this.ws.onerror = (error) => {
-            console.error('WebSocket Error:', error);
+            console.error('%c[WebSocket] Error',
+                'background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px;',
+                error
+            );
             this.triggerHandlers('error', error);
         };
 
         this.ws.onclose = (event) => {
-            console.log('WebSocket Closed:', event.code);
+            console.log('%c[WebSocket] Closed',
+                'background: #95a5a6; color: white; padding: 2px 6px; border-radius: 3px;',
+                {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                }
+            );
+
             this.triggerHandlers('close', {
                 code: event.code,
-                reason: event.reason
+                reason: event.reason,
+                wasClean: event.wasClean
             });
+
             this.handleReconnection();
         };
 
@@ -77,6 +120,10 @@ export class WebSocketConnection {
     }
 
     disconnect() {
+        console.log('%c[WebSocket] Manual disconnect',
+            'background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px;'
+        );
+
         this.isManualClose = true;
 
         if (this.reconnectTimeout) {

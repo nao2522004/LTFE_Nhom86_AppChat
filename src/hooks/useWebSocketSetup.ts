@@ -22,14 +22,28 @@ export const useWebSocketSetup = () => {
 
     // Track if user list has been loaded
     const userListLoadedRef = useRef(false);
+    const isSetupRef = useRef(false);
 
     useEffect(() => {
         if (!isAuthenticated) return;
 
+        if (isSetupRef.current) {
+            console.log('[useWebSocketSetup] Already setup, skipping...');
+            return;
+        }
+
+        isSetupRef.current = true;
+        console.log('[useWebSocketSetup] Setting up WebSocket listeners...');
+
         const handleOpen = () => {
             console.log('WebSocket Connected');
+
             dispatch(setConnected());
             dispatch(resetReconnectAttempts());
+
+            setTimeout(() => {
+                console.log('[WS EVENT] State after setConnected should be "connected"');
+            }, 50);
 
             // Load user list ONLY ONCE when connected
             if (!userListLoadedRef.current) {
@@ -149,6 +163,12 @@ export const useWebSocketSetup = () => {
         websocketService.on('message', (message: any) => {
             console.log('WebSocket Message:', message);
         });
+
+        if (websocketService.isConnected()) {
+            console.log('[useWebSocketSetup] WebSocket already connected, triggering handleOpen manually');
+            handleOpen();
+        }
+        console.log('[useWebSocketSetup] All listeners registered');
 
         // ===== CLEANUP =====
         return () => {
