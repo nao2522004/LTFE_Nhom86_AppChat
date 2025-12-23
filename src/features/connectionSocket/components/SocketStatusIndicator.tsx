@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import styles from './SocketIndicator.module.css';
 import {useAppSelector} from "../../../hooks/hooks";
 import {selectConnectionStatus, selectMaxReconnectAttempts, selectReconnectAttempts} from "../connectionSlice";
@@ -7,6 +7,21 @@ const SocketStatusIndicator: React.FC = () => {
     const status = useAppSelector(selectConnectionStatus);
     const reconnectAttempts = useAppSelector(selectReconnectAttempts);
     const maxAttempts = useAppSelector(selectMaxReconnectAttempts);
+
+    const [debouncedStatus, setDebouncedStatus] = useState(status);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedStatus(status);
+            console.log('[SocketStatusIndicator] Status updated:', {
+                from: debouncedStatus,
+                to: status,
+                timestamp: new Date().toISOString()
+            });
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [status]);
 
     const getStatusText = () => {
         switch (status) {

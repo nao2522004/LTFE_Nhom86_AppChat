@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import { useAppSelector } from '../../../hooks/hooks';
 import {
     selectConnectionStatus,
@@ -13,6 +13,21 @@ const SocketStatusBar: React.FC = () => {
     const status = useAppSelector(selectConnectionStatus);
     const attempts = useAppSelector(selectReconnectAttempts);
     const maxAttempts = useAppSelector(selectMaxReconnectAttempts);
+
+    const [debouncedStatus, setDebouncedStatus] = useState(status);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedStatus(status);
+            console.log('[SocketStatusBar] Status updated:', {
+                from: debouncedStatus,
+                to: status,
+                timestamp: new Date().toISOString()
+            });
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [status]);
 
     const handleToggleExpand = useCallback(() => {
         setExpanded(prev => !prev);
