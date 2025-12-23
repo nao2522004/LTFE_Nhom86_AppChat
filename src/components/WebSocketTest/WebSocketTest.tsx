@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppSelector } from '../../hooks/hooks';
 import websocketService from "../../services/websocket/MainService";
+import { selectIsConnected } from '../../features/connectionSocket/connectionSlice';
 
 interface ConnectionLog {
     timestamp: string;
@@ -13,8 +14,9 @@ const WebSocketTest: React.FC = () => {
     const mountCountRef = useRef(0);
     const connectCountRef = useRef(0);
     const disconnectCountRef = useRef(0);
-    
-    const { isAuthenticated, wsConnected } = useAppSelector((state) => state.auth);
+
+    const { isAuthenticated } = useAppSelector((state) => state.auth);
+    const wsConnected = useAppSelector(selectIsConnected);
 
     const addLog = (event: ConnectionLog['event'], message: string) => {
         const timestamp = new Date().toLocaleTimeString('vi-VN', { 
@@ -43,23 +45,23 @@ const WebSocketTest: React.FC = () => {
         // onOpen handler
         const handleOpen = (data: any) => {
             connectCountRef.current += 1;
-            addLog('connect', `✅ WebSocket CONNECTED (Lần ${connectCountRef.current})`);
+            addLog('connect', `WebSocket CONNECTED (Lần ${connectCountRef.current})`);
         };
 
         // onClose handler
         const handleClose = (data: any) => {
             disconnectCountRef.current += 1;
-            addLog('disconnect', `❌ WebSocket DISCONNECTED - Code: ${data.code}, Reason: ${data.reason || 'N/A'} (Lần ${disconnectCountRef.current})`);
+            addLog('disconnect', `WebSocket DISCONNECTED - Code: ${data.code}, Reason: ${data.reason || 'N/A'} (Lần ${disconnectCountRef.current})`);
         };
 
         // onError handler
         const handleError = (error: any) => {
-            addLog('error', `⚠️ WebSocket Error: ${error.message || 'Unknown error'}`);
+            addLog('error', `WebSocket Error: ${error.message || 'Unknown error'}`);
         };
 
         // onMessage handler (general)
         const handleMessage = (message: any) => {
-            addLog('message', `📨 Received: ${JSON.stringify(message).substring(0, 100)}...`);
+            addLog('message', `Received: ${JSON.stringify(message).substring(0, 100)}...`);
         };
 
         // Register event listeners
@@ -71,7 +73,7 @@ const WebSocketTest: React.FC = () => {
         // Check if already connected
         if (websocketService.isConnected()) {
             connectCountRef.current += 1;
-            addLog('connect', `✅ WebSocket đã CONNECTED (Lần ${connectCountRef.current})`);
+            addLog('connect', `WebSocket đã CONNECTED (Lần ${connectCountRef.current})`);
         }
 
         // Cleanup function (unmount)
@@ -89,12 +91,12 @@ const WebSocketTest: React.FC = () => {
 
     const handleManualDisconnect = () => {
         websocketService.disconnect();
-        addLog('disconnect', '🔌 Manual disconnect triggered');
+        addLog('disconnect', 'Manual disconnect triggered');
     };
 
     const handleManualConnect = () => {
         websocketService.connect();
-        addLog('connect', '🔌 Manual connect triggered');
+        addLog('connect', 'Manual connect triggered');
     };
 
     const handleTestMessage = async () => {
@@ -106,9 +108,9 @@ const WebSocketTest: React.FC = () => {
                     data: { timestamp: Date.now() }
                 }
             });
-            addLog('message', '📤 Sent PING message');
+            addLog('message', 'Sent PING message');
         } catch (error: any) {
-            addLog('error', `❌ Failed to send: ${error.message}`);
+            addLog('error', `Failed to send: ${error.message}`);
         }
     };
 
@@ -181,7 +183,7 @@ const WebSocketTest: React.FC = () => {
                         ...(wsConnected ? styles.buttonDisabled : {})
                     }}
                 >
-                    🔌 Connect
+                    Connect
                 </button>
                 <button
                     onClick={handleManualDisconnect}
@@ -192,7 +194,7 @@ const WebSocketTest: React.FC = () => {
                         ...(!wsConnected ? styles.buttonDisabled : {})
                     }}
                 >
-                    🔌 Disconnect
+                    Disconnect
                 </button>
                 <button
                     onClick={handleTestMessage}
@@ -203,7 +205,7 @@ const WebSocketTest: React.FC = () => {
                         ...(!wsConnected ? styles.buttonDisabled : {})
                     }}
                 >
-                    📤 Send Test Message
+                    Send Test Message
                 </button>
                 <button
                     onClick={clearLogs}
@@ -212,19 +214,19 @@ const WebSocketTest: React.FC = () => {
                         ...styles.clearButton
                     }}
                 >
-                    🗑️ Clear Logs
+                    Clear Logs
                 </button>
             </div>
 
             {!isAuthenticated && (
                 <div style={styles.warning}>
-                    ⚠️ Bạn cần đăng nhập để test WebSocket connection
+                    Bạn cần đăng nhập để test WebSocket connection
                 </div>
             )}
 
             <div style={styles.logsContainer}>
                 <div style={styles.logsHeader}>
-                    <h3 style={styles.logsTitle}>📋 Connection Logs</h3>
+                    <h3 style={styles.logsTitle}>Connection Logs</h3>
                     <span style={styles.logsCount}>{logs.length} events</span>
                 </div>
                 
@@ -255,12 +257,12 @@ const WebSocketTest: React.FC = () => {
             <div style={styles.info}>
                 <h4 style={styles.infoTitle}>ℹ️ Test Instructions:</h4>
                 <ul style={styles.infoList}>
-                    <li>✅ Verify component chỉ mount 1 lần khi load trang</li>
-                    <li>✅ Verify <strong>onOpen</strong> (connect event) chỉ fire 1 lần</li>
-                    <li>✅ Verify <strong>onClose</strong> (disconnect event) khi mất kết nối</li>
-                    <li>✅ Test manual disconnect/reconnect</li>
-                    <li>✅ Test gửi message qua WebSocket</li>
-                    <li>✅ Kiểm tra cleanup khi unmount không gây reconnect</li>
+                    <li>Verify component chỉ mount 1 lần khi load trang</li>
+                    <li>Verify <strong>onOpen</strong> (connect event) chỉ fire 1 lần</li>
+                    <li>Verify <strong>onClose</strong> (disconnect event) khi mất kết nối</li>
+                    <li>Test manual disconnect/reconnect</li>
+                    <li>Test gửi message qua WebSocket</li>
+                    <li>Kiểm tra cleanup khi unmount không gây reconnect</li>
                 </ul>
             </div>
 

@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// ===== TYPES =====
 export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting' | 'connecting';
 
 interface ConnectionState {
@@ -33,6 +32,7 @@ const connectionSlice = createSlice({
         setConnecting: (state) => {
             state.status = 'connecting';
             state.error = null;
+            console.log('Connection Status: CONNECTING');
         },
 
         setConnected: (state) => {
@@ -41,6 +41,7 @@ const connectionSlice = createSlice({
             state.reconnectAttempts = 0;
             state.lastConnected = new Date().toISOString();;
             state.isManualDisconnect = false;
+            console.log('Connection Status: CONNECTED');
         },
 
         setDisconnected: (state, action: PayloadAction<{ isManual?: boolean; error?: string }>) => {
@@ -51,19 +52,30 @@ const connectionSlice = createSlice({
             if (action.payload.error) {
                 state.error = action.payload.error;
             }
+
+            console.log('Connection Status: DISCONNECTED', {
+                isManual: state.isManualDisconnect,
+                error: state.error
+            });
         },
 
         setReconnecting: (state) => {
             state.status = 'reconnecting';
+            console.log('Connection Status: RECONNECTING', {
+                attempts: state.reconnectAttempts + 1,
+                max: state.maxReconnectAttempts
+            });
         },
 
         // ===== RECONNECTION =====
         incrementReconnectAttempts: (state) => {
             state.reconnectAttempts++;
+            console.log(`Reconnect Attempt: ${state.reconnectAttempts}/${state.maxReconnectAttempts}`);
         },
 
         resetReconnectAttempts: (state) => {
             state.reconnectAttempts = 0;
+            console.log('Reconnect attempts reset');
         },
 
         setMaxReconnectAttempts: (state, action: PayloadAction<number>) => {
@@ -73,6 +85,7 @@ const connectionSlice = createSlice({
         // ===== ERROR =====
         setConnectionError: (state, action: PayloadAction<string>) => {
             state.error = action.payload;
+            console.error('Connection Error:', action.payload);
         },
 
         clearConnectionError: (state) => {
@@ -87,6 +100,7 @@ const connectionSlice = createSlice({
             state.lastConnected = null;
             state.lastDisconnected = null;
             state.isManualDisconnect = false;
+            console.log('Connection state reset');
         }
     }
 });

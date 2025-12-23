@@ -8,7 +8,6 @@ interface AuthState {
     isAuthenticated: boolean;
     loading: boolean;
     error: string | null;
-    wsConnected: boolean;
 }
 
 const initialState: AuthState = {
@@ -17,7 +16,6 @@ const initialState: AuthState = {
     isAuthenticated: false,
     loading: false,
     error: null,
-    wsConnected: false
 };
 
 // Login thunk
@@ -163,13 +161,9 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.loading = false;
             state.error = null;
-            state.wsConnected = false;
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             websocketService.disconnect();
-        },
-        setWsConnected: (state, action: PayloadAction<boolean>) => {
-            state.wsConnected = action.payload;
         },
         updateUserStatus: (state, action: PayloadAction<{ userId: string; isOnline: boolean }>) => {
             if (state.user && state.user.id === action.payload.userId) {
@@ -190,12 +184,10 @@ const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.error = null;
-                state.wsConnected = true;
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.wsConnected = false;
             });
 
         // ReLogin
@@ -209,12 +201,10 @@ const authSlice = createSlice({
                 state.isAuthenticated = true;
                 state.token = action.payload.RE_LOGIN_CODE;
                 state.error = null;
-                state.wsConnected = true;
             })
             .addCase(reLogin.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.wsConnected = false;
             })
 
         // Register
@@ -229,12 +219,10 @@ const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.error = null;
-                state.wsConnected = true;
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-                state.wsConnected = false;
             });
 
         // Logout
@@ -248,14 +236,12 @@ const authSlice = createSlice({
                 state.token = null;
                 state.isAuthenticated = false;
                 state.error = null;
-                state.wsConnected = false;
             })
             .addCase(logout.rejected, (state, action) => {
                 state.loading = false;
                 state.user = null;
                 state.token = null;
                 state.isAuthenticated = false;
-                state.wsConnected = false;
                 state.error = action.payload as string;
             });
 
@@ -269,17 +255,15 @@ const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.isAuthenticated = true;
-                state.wsConnected = true;
             })
             .addCase(getCurrentUser.rejected, (state) => {
                 state.loading = false;
                 state.isAuthenticated = false;
                 state.user = null;
                 state.token = null;
-                state.wsConnected = false;
             });
     }
 });
 
-export const { clearError, resetAuth, setWsConnected, updateUserStatus } = authSlice.actions;
+export const { clearError, resetAuth, updateUserStatus } = authSlice.actions;
 export default authSlice.reducer;

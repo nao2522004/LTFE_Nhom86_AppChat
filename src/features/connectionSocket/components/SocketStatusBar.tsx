@@ -23,9 +23,20 @@ const SocketStatusBar: React.FC = () => {
     }, []);
 
     if (status === 'connected') return null;
+    if (status === 'connecting' && attempts === 0) return null;
 
     const isError = status === 'disconnected';
     const isReconnecting = status === 'reconnecting' || status === 'connecting';
+
+    const getStatusMessage = () => {
+        if (status === 'connecting') {
+            return 'Đang kết nối...';
+        }
+        if (status === 'reconnecting') {
+            return `Đang kết nối lại... (${attempts}/${maxAttempts})`;
+        }
+        return 'Mất kết nối hoàn toàn';
+    };
 
     return (
         <div className={styles.container}>
@@ -36,9 +47,7 @@ const SocketStatusBar: React.FC = () => {
                     <div className={`${styles.dot} ${isReconnecting ? styles.pulse : styles.dead}`} />
 
                     <span className={styles.message}>
-                        {isReconnecting
-                            ? `Đang kết nối lại... (${attempts}/${maxAttempts})`
-                            : 'Mất kết nối hoàn toàn'}
+                        {getStatusMessage()}
                     </span>
 
                     <span className={styles.chevron}>
@@ -53,7 +62,9 @@ const SocketStatusBar: React.FC = () => {
                             {isReconnecting ? (
                                 <p>
                                     Hệ thống đang tự động kết nối lại.
-                                    Vui lòng kiểm tra lại đường truyền internet.
+                                    {status === 'reconnecting' && (
+                                        <> Vui lòng kiểm tra lại đường truyền internet.</>
+                                    )}
                                 </p>
                             ) : (
                                 <p>

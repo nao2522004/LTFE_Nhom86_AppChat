@@ -25,13 +25,39 @@ const SocketStatusIndicator: React.FC = () => {
 
     const getStatusClass = () => {
         if (status === 'connected') return 'connected';
-        if (status === 'reconnecting') return 'reconnecting';
+        if (status === 'reconnecting' || status === 'connecting') return 'reconnecting';
         return 'disconnected';
     };
 
+    const getStatusColor = () => {
+        switch (status) {
+            case 'connected':
+                return '#82e0aa'; // Green
+            case 'connecting':
+                return '#3498db'; // Blue
+            case 'reconnecting':
+                return '#f39c12'; // Orange
+            case 'disconnected':
+                return '#e74c3c'; // Red
+            default:
+                return '#95a5a6'; // Gray
+        }
+    };
+
     return (
-        <div className={`${styles.indicator} ${styles[getStatusClass()]}`}>
-            <span className={styles.dot}/>
+        <div
+            className={`${styles.indicator} ${styles[getStatusClass()]}`}
+            style={{
+                borderColor: `${getStatusColor()}33`
+            }}
+        >
+            <span
+                className={styles.dot}
+                style={{
+                    background: getStatusColor(),
+                    boxShadow: `0 0 8px ${getStatusColor()}`
+                }}
+            />
             <span className={styles.text}>{getStatusText()}</span>
         </div>
     );

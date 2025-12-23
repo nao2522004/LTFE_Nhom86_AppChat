@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { Outlet } from "react-router-dom";
 import styles from "./MainLayout.module.css";
 import Sidebar from "../components/Sidebar";
@@ -9,20 +9,45 @@ import SocketStatusIndicator from "../features/connectionSocket/components/Socke
 
 const MainLayout: React.FC = () => {
     const connectionStatus = useAppSelector(selectConnectionStatus);
-    const isConnected = connectionStatus === 'connected';
+
+    // Delay hiển thị indicator
+    const [showIndicator, setShowIndicator] = useState(false);
+
+    useEffect(() => {
+        // Delay 300ms trước khi hiển thị
+        const timer = setTimeout(() => {
+            setShowIndicator(true);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Status Bar: Hiện khi có vấn đề
+    const shouldShowStatusBar =
+        connectionStatus === 'disconnected' ||
+        connectionStatus === 'reconnecting';
+
+    // Indicator: Hiện sau delay
+    const shouldShowIndicator = showIndicator;
 
     return (
         <div className={styles.appContainer}>
-            {/* Thanh trạng thái bay lơ lửng */}
-            {!isConnected && <SocketStatusBar />}
+            {shouldShowStatusBar && <SocketStatusBar />}
 
             {/* Sideba */}
             <Sidebar />
 
             <div className={styles.outletContainer}>
-                {/* Indicator ở góc nhỏ gọn */}
-                {isConnected && (
-                    <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 99 }}>
+                {shouldShowIndicator && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '15px',
+                            right: '15px',
+                            zIndex: 99,
+                            animation: 'fadeIn 0.3s ease-in'
+                        }}
+                    >
                         <SocketStatusIndicator />
                     </div>
                 )}
