@@ -62,6 +62,7 @@ export const reLogin = createAsyncThunk(
             if (!response.RE_LOGIN_CODE) {
                 localStorage.removeItem("user");
                 localStorage.removeItem("token");
+                websocketService.disconnect();
                 return rejectWithValue("Token timeout or invalid");
             } 
 
@@ -69,6 +70,9 @@ export const reLogin = createAsyncThunk(
 
             return response;
         } catch(error: any) {
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            websocketService.disconnect();
             return rejectWithValue(error.message || "ReLogin failed");
         }
     }
@@ -114,6 +118,7 @@ export const logout = createAsyncThunk(
             await websocketService.logout();
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            websocketService.disconnect();
         } catch (error: any) {
             // Still clear local data even if logout fails
             localStorage.removeItem('token');
