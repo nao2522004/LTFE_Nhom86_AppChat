@@ -1,6 +1,5 @@
 import {useEffect, useRef} from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
-import { setWsConnected } from '../features/auth/authSlice';
 import {
     setConnected,
     setDisconnected,
@@ -15,6 +14,7 @@ import websocketService from "../services/websocket/MainService";
 /**
  * Hook để setup WebSocket event listeners
  * Chỉ gọi 1 lần ở App.tsx
+ * SYNC CẢ 2 STATE: authSlice.wsConnected + connectionSlice.status
  */
 export const useWebSocketSetup = () => {
     const dispatch = useAppDispatch();
@@ -28,7 +28,6 @@ export const useWebSocketSetup = () => {
 
         const handleOpen = () => {
             console.log('WebSocket Connected');
-            dispatch(setWsConnected(true));
             dispatch(setConnected());
             dispatch(resetReconnectAttempts());
 
@@ -42,7 +41,6 @@ export const useWebSocketSetup = () => {
 
         const handleClose = (data: any) => {
             console.log('WebSocket Closed:', data);
-            dispatch(setWsConnected(false));
             dispatch(setDisconnected({
                 isManual: false,
                 error: data.reason
