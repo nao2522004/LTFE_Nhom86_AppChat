@@ -3,12 +3,16 @@ import AppRoutes from './routes';
 import {useAppDispatch} from './hooks/hooks';
 import {reLogin} from './features/auth/authSlice';
 import {useWebSocketSetup} from './hooks/useWebSocketSetup';
+import useConnectionDebug from "./hooks/useConnectionDebug";
+import {setConnecting} from "./features/connectionSocket/connectionSlice";
 
 function App() {
     const dispatch = useAppDispatch();
 
     // Setup WebSocket event listeners
     useWebSocketSetup();
+
+    useConnectionDebug();
 
     // check auth
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -25,6 +29,7 @@ function App() {
 
             if (token && user) {
                 try {
+                    dispatch(setConnecting());
                     await dispatch(reLogin({user: user, code: token}));
                 } catch (error: any) {
                     localStorage.removeItem('token');
