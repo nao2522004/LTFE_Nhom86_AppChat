@@ -13,8 +13,8 @@ const UserProfile: React.FC = () => {
                     <img src="https://img.freepik.com/free-psd/3d-illustration-human-avatar-profile_23-2150671142.jpg"
                         alt="Rachel" className={styles.bigAvatar} />
                     <div className={styles.avatarActions}>
-                        <a className={styles.linkAction}>Change</a>
-                        <a className={[styles.linkAction, styles.delete].join(' ')}>Delete</a>
+                        <button className={styles.linkAction}>Change</button>
+                        <button className={[styles.linkAction, styles.delete].join(' ')}>Delete</button>
                     </div>
                 </div>
                 <div className={styles.profileNames}>
@@ -31,48 +31,48 @@ const UserProfile: React.FC = () => {
                         231-342-3245
                         <span className={styles.subText}>https://callme/231-342-3245</span>
                     </div>
-                    <a href="#" className={styles.editLink}>Edit</a>
+                    <button className={styles.editLink}>Edit</button>
                 </div>
 
                 <div className={styles.detailRow}>
                     <div className={styles.detailLabel}>Email</div>
                     <div className={styles.detailValue}>rachel@callme.io</div>
-                    <a href="#" className={styles.editLink}>Edit</a>
+                    <button className={styles.editLink}>Edit</button>
                 </div>
 
                 <div className={styles.detailRow}>
                     <div className={styles.detailLabel}>Subscription Type</div>
                     <div className={styles.detailValue}>
                         Basic User
-                        <a href="#" className={styles.tagUpgrade}>Upgrade</a>
+                        <button className={styles.tagUpgrade}>Upgrade</button>
                     </div>
                 </div>
 
                 <div className={styles.detailRow}>
                     <div className={styles.detailLabel}>Time Zone</div>
                     <div className={styles.detailValue}>(GMT+6:00) Astana, Dhaka</div>
-                    <a href="#" className={styles.editLink}>Edit</a>
+                    <button className={styles.editLink}>Edit</button>
                 </div>
 
                 <div className={styles.detailRow}>
                     <div className={styles.detailLabel}>Language</div>
                     <div className={styles.detailValue}>English</div>
-                    <a href="#" className={styles.editLink}>Edit</a>
+                    <button className={styles.editLink}>Edit</button>
                 </div>
 
                 <div className={styles.detailRow}>
                     <div className={styles.detailLabel}>Password</div>
                     <div className={styles.detailValue}>••••••••</div>
-                    <a href="#" className={styles.editLink}>Edit</a>
+                    <button className={styles.editLink}>Edit</button>
                 </div>
 
                 <div className={styles.detailRow}>
                     <div className={styles.detailLabel}>Device</div>
                     <div className={styles.detailValue}>
-                        <a href="#" className={styles.editLink} style={{ fontWeight: 400 }}>Sign Out From All Devices <i
-                            className="far fa-question-circle"></i></a>
+                        <button className={styles.editLink} style={{ fontWeight: 400 }}>Sign Out From All Devices <i
+                            className="far fa-question-circle"></i></button>
                     </div>
-                    <a href="#" className={styles.editLink}>Edit</a>
+                    <button className={styles.editLink}>Edit</button>
                 </div>
             </div>
         </section>
