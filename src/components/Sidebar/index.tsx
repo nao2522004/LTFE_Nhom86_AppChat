@@ -1,16 +1,12 @@
-import React, { useEffect } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Sidebar.module.css";
-import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
-import { logout, clearError } from "../../features/auth/authSlice";
+import { useAppDispatch } from "../../hooks/hooks";
+import { logout } from "../../features/auth/authSlice";
 
 const Sidebar: React.FC = () => {
     const dispatch = useAppDispatch();
-
-    useEffect(() => {
-        return () => {
-            dispatch(clearError());
-        };
-    }, [dispatch]);
+    const navigate = useNavigate();
 
     const handleLogout = async () => {
         await dispatch(logout());
@@ -23,6 +19,7 @@ const Sidebar: React.FC = () => {
             </div>
             <div className={styles.navMenu}>
                 <div className={styles.navItem}><i className="fas fa-home"></i></div>
+                <div className={styles.navItem} onClick={() => navigate('/profile')}><i className="fas fa-user"></i></div>
                 <div className={[styles.navItem, styles.active].join(' ')}><i className="fas fa-comment-dots"></i></div>
                 <div className={styles.navItem}><i className="fas fa-bell"></i></div>
                 <div className={styles.navItem}><i className="fas fa-cog"></i></div>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import { login, clearError } from '../authSlice';
 import styles from './LoginForm.module.css';
@@ -107,12 +106,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
                                         className={styles.togglePassword}
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
-                                        {showPassword ? '🙈' : '👁️'}
+                                        <i className={`${showPassword ? "fas fa-eye-slash" : "fas fa-eye"} ${styles.showPasswordIcon}`}></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <a href="#" className={styles.forgotPass}>Forgot Password?</a>
+                            <p className={styles.forgotPass}>Forgot Password?</p>
 
                             <button
                                 type="submit"
@@ -124,14 +123,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
                             <div className={styles.registerLink}>
                                 Don't have an account?{' '}
-                                <a href="#" onClick={(e) => { e.preventDefault(); onSwitchToRegister?.() }}>
+                                <button type="button" className={styles.switchRegisterBtn} onClick={onSwitchToRegister}>
                                     Register Now
-                                </a>
+                                </button>
                             </div>
                         </form>
 
                         <div className={styles.rightFooter}>
-                            <a href="#">Terms and Services</a>
+                            <p>Terms and Services</p>
                             <div className={styles.contactInfo}>
                                 Have a problem? Contact us at<br />
                                 <a href="mailto:22130157@st.hcmuaf.edu.vn">22130157@st.hcmuaf.edu.vn</a>
