@@ -217,14 +217,20 @@
     opacity: 0.7;
 }
 
+.showPasswordIcon {
+    font-size: 1.1rem;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
 .forgotPass {
     display: block;
     text-align: right;
     font-size: 11px;
     color: #7b948a;
-    text-decoration: none;
     margin-top: -10px;
     margin-bottom: 30px;
+    cursor: pointer;
 }
 
 .forgotPass:hover {
@@ -262,13 +268,15 @@
     color: #d0dcd8;
 }
 
-.registerLink a {
+.switchRegisterBtn {
     color: #fff;
-    text-decoration: none;
     font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
-.registerLink a:hover {
+.switchRegisterBtn:hover {
     text-decoration: underline;
 }
 
@@ -281,12 +289,13 @@
     color: #7b948a;
 }
 
-.rightFooter a {
+.rightFooter p {
     color: #7b948a;
     text-decoration: underline;
+    cursor: pointer;
 }
 
-.rightFooter a:hover {
+.rightFooter p:hover {
     color: #fff;
 }
 

@@ -5,6 +5,7 @@ import AuthPage from '../features/auth/pages/AuthPage';
 import WebSocketTestPage from '../features/connectionSocket/pages/WebSocketTestPage';
 import MainLayout from '../layouts/MainLayout';
 import ChatPage from '../features/chat/pages/ChatPage';
+import ProfilePage from '../features/user/pages/ProfilePage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -63,6 +64,7 @@ const AppRoutes: React.FC = () => {
 
                     {/* Outlet of MainLayout */}
                     <Route path="chat" element={<ChatPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
                 </Route>
 
                 {/* Default Route */}

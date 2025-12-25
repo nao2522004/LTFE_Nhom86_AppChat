@@ -192,6 +192,12 @@
     opacity: 0.7;
 }
 
+.showPasswordIcon {
+    font-size: 1.1rem;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
 .rowGroup {
     display: flex;
     gap: 15px;
@@ -221,12 +227,12 @@
     cursor: pointer;
 }
 
-.checkboxGroup a {
+.checkboxGroup p {
     color: #5D9B90;
     text-decoration: none;
 }
 
-.checkboxGroup a:hover {
+.checkboxGroup p:hover {
     text-decoration: underline;
 }
 
@@ -264,13 +270,15 @@
     margin: 0;
 }
 
-.loginLink a {
-    color: white;
-    font-weight: 600;
-    text-decoration: none;
+.switchLoginBtn {
+    color: #fff;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
-.loginLink a:hover {
+.switchLoginBtn {
     text-decoration: underline;
 }
 

@@ -8,11 +8,23 @@
     --text-white: #ffffff;
     --text-gray: #aab6b1;
 
+    /* Chat */
     --bg-chat: #eff5f3;
     --bg-gray-chat: #f0f2f5;
     --text-dark-chat: #333;
     --text-light-chat: #888;
     --danger-color-chat: #ff6b6b;
+
+    /* User Profile */
+    --primary-bg: #F2F4F8;
+    --white: #ffffff;
+    --text-dark: #333333;
+    --text-light: #7D8592;
+    --accent-orange: #FF7B54;
+    --accent-purple: #5B4B8A;
+    --link-blue: #3E8BFF;
+    --border-radius: 16px;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 }
 
 * {

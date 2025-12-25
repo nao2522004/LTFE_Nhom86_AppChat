@@ -1,71 +1,164 @@
 .profileContainer {
-    padding: 20px;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.avatarSection {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow-y: auto;
     position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 20px;
 }
 
-.avatar {
+.banner {
     width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
+    height: 160px;
+    background: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+    position: relative;
+    padding: 20px;
 }
 
-.onlineIndicator {
+.uploadCoverBtn {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    background: #4CAF50;
-    border: 3px solid white;
-    border-radius: 50%;
+    top: 20px;
+    right: 20px;
+    background: rgba(91, 75, 138, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
 }
 
-.infoSection {
+.profileHeader {
+    padding: 0 40px;
+    margin-top: -50px;
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 40px;
+}
+
+.avatarContainer {
+    position: relative;
+    margin-right: 20px;
     text-align: center;
 }
 
-.displayName {
-    font-size: 24px;
+.bigAvatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    border: 4px solid var(--white);
+    background-color: #ffe0b2;
+    object-fit: cover;
+}
+
+.avatarActions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.linkAction {
+    color: var(--link-blue);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.linkAction.delete {
+    color: var(--text-light);
+}
+
+.profileNames h2 {
+    font-size: 22px;
     margin-bottom: 5px;
 }
 
-.username {
-    color: #666;
-    margin-bottom: 5px;
+.profileNames p {
+    font-size: 13px;
+    color: var(--text-light);
 }
 
-.email {
-    color: #888;
+.profileNames i {
+    margin-right: 5px;
+    color: var(--accent-orange);
+}
+
+.detailList {
+    padding: 0 40px 40px 40px;
+}
+
+.detailRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detailRow:last-child {
+    border-bottom: none;
+}
+
+.detailLabel {
+    width: 200px;
+    font-weight: 500;
+    color: var(--text-light);
     font-size: 14px;
 }
 
-.bioSection {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 8px;
+.detailValue {
+    flex-grow: 1;
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 15px;
 }
 
-.editButton {
-    margin-top: 20px;
-    padding: 10px 24px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
+.subText {
+    display: block;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+.editLink {
+    color: var(--link-blue);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    font-size: 16px;
 }
 
-.editButton:hover {
-    background: #0056b3;
+.tagUpgrade {
+    color: var(--link-blue);
+    background: #e6f0ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-left: 10px;
+    text-decoration: none;
+}
+
+.profileContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+.profileContainer::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 10px 0;
+}
+
+.profileContainer::-webkit-scrollbar-thumb {
+    background-color: #D1D5DB;
+    border-radius: 20px;
+    border: 2px solid transparent;
+}
+
+.profileContainer::-webkit-scrollbar-thumb:hover {
+    background-color: #9CA3AF;
+}
+
+.profileContainer {
+    scrollbar-width: thin;
+    scrollbar-color: #D1D5DB transparent;
 }
