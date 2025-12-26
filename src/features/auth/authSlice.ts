@@ -95,14 +95,6 @@ export const register = createAsyncThunk(
             // Send register request
             const response = await websocketService.register(userData);
             
-            // Save to localStorage
-            if (response.token) {
-                localStorage.setItem('token', response.token);
-            }
-            if (response.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-            }
-            
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Đăng ký thất bại');
@@ -220,9 +212,6 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.loading = false;
-                state.isAuthenticated = true;
-                state.user = action.payload.user;
-                state.token = action.payload.token;
                 state.error = null;
             })
             .addCase(register.rejected, (state, action) => {
