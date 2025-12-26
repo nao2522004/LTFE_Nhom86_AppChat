@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import { register, clearError } from '../authSlice';
 import styles from './RegisterForm.module.css';
@@ -8,6 +9,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -19,7 +21,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [validationError, setValidationError] = useState('');
-    
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+     
     const dispatch = useAppDispatch();
     const { loading, error } = useAppSelector((state) => state.auth);
 
@@ -28,6 +31,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             dispatch(clearError());
         };
     }, [dispatch]);
+
+    // Redirect to login after successful registration
+    useEffect(() => {
+        if (showSuccessMessage) {
+            const timer = setTimeout(() => {
+                if (onSwitchToLogin) {
+                    onSwitchToLogin();
+                } else {
+                    navigate('/auth?mode=login');
+                }
+            }, 2000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessMessage, navigate, onSwitchToLogin]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
@@ -51,22 +69,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             return;
         }
 
-        if (formData.pass.length < 5) {
-            setValidationError('Password must be at least 5 characters');
-            return;
-        }
-
         if (!agreedToTerms) {
             setValidationError('Please agree to the Terms & Privacy');
             return;
         }
 
         // Register
-        await dispatch(register({
+        const result = await dispatch(register({
             user: formData.user,
-            pass: formData.pass,
-            name: formData.name
+            pass: formData.pass
         }));
+
+        // check if registration was successful
+        if (register.fulfilled.match(result)) {
+            setShowSuccessMessage(true);
+        }
     };
 
     return (
@@ -98,6 +115,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     <div className={styles.formContainer}>
                         <h2>Create Account</h2>
 
+                        {/* Success Message */}
+                        {showSuccessMessage && (
+                            <div className={styles.successMessage}>
+                                Registration successful! Redirecting to login...
+                            </div>
+                        )}
+
+                        {/* Error Message */}
                         {(error || validationError) && (
                             <div className={styles.errorMessage}>
                                 {validationError || error}

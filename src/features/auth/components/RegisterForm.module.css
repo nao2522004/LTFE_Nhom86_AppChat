@@ -108,7 +108,7 @@
 .formContainer h2 {
     font-size: 32px;
     font-weight: 600;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: white;
 }
 
@@ -228,6 +228,7 @@
 }
 
 .checkboxGroup p {
+    display: inline-block;
     color: #5D9B90;
     text-decoration: none;
 }
@@ -310,7 +311,47 @@
     color: #ffcccc;
     font-size: 14px;
     text-align: center;
+    margin-bottom: 5px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.successMessage {
+    padding: 12px;
+    background: rgba(40, 167, 69, 0.2);
+    border: 1px solid rgba(40, 167, 69, 0.5);
+    border-radius: 8px;
+    color: #b3f0c1;
+    font-size: 14px;
+    text-align: center;
     margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* .successMessage::before {
+    content: '✓';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: rgba(40, 167, 69, 0.3);
+    border-radius: 50%;
+    font-weight: bold;
+} */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- RESPONSIVE (Mobile) --- */
