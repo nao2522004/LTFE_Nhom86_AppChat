@@ -227,7 +227,7 @@ export class WebSocketConnection {
         return Math.min(exponentialDelay + jitter, maxDelay);
     }
 
-    private waitForConnection(timeout = 5000): Promise<void> {
+    waitForConnection(timeout = 5000): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
 
