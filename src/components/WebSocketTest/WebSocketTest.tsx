@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppSelector } from '../../hooks/hooks';
 import websocketService from "../../services/websocket/MainService";
-import { selectIsConnected } from '../../features/connectionSocket/connectionSlice';
+import { selectIsConnected } from '../../features/socket/socketSlice';
 
 interface ConnectionLog {
     timestamp: string;
@@ -85,7 +85,7 @@ const WebSocketTest: React.FC = () => {
             websocketService.off('error', handleError);
             websocketService.off('message', handleMessage);
             
-            // Note: We don't disconnect here to maintain connectionSocket
+            // Note: We don't disconnect here to maintain socket
         };
     }, [isAuthenticated]);
 

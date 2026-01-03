@@ -2,10 +2,10 @@ import React, {useEffect, useState} from "react";
 import { Outlet } from "react-router-dom";
 import styles from "./MainLayout.module.css";
 import Sidebar from "../components/Sidebar";
-import SocketStatusBar from "../features/connectionSocket/components/SocketStatusBar";
+import SocketStatusBar from "../features/socket/components/SocketStatusBar";
 import {useAppSelector} from "../hooks/hooks";
-import {selectConnectionStatus} from "../features/connectionSocket/connectionSlice";
-import SocketStatusIndicator from "../features/connectionSocket/components/SocketStatusIndicator";
+import {selectConnectionStatus} from "../features/socket/socketSlice";
+import SocketStatusIndicator from "../features/socket/components/SocketStatusIndicator";
 
 const MainLayout: React.FC = () => {
     const connectionStatus = useAppSelector(selectConnectionStatus);
