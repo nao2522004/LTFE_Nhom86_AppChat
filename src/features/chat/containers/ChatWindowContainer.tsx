@@ -11,7 +11,7 @@ import {
     getRoomMessages,
     getPeopleMessages
 } from '../chatSlice';
-import { selectIsConnected } from '../../connectionSocket/connectionSlice';
+import { selectIsConnected } from '../../socket/socketSlice';
 import ChatWindowView from '../components/ChatWindow/ChatWindowView';
 
 /**

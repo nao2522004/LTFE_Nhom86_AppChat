@@ -63,7 +63,7 @@ class WebSocketService {
 
         this.ws.onopen = () => {
             console.log('WebSocket Connected');
-            this.reconnectAttempts = 0; // Reset on successful connectionSocket
+            this.reconnectAttempts = 0; // Reset on successful socket
             this.triggerHandlers('open', { connected: true });
         };
 
@@ -215,7 +215,7 @@ class WebSocketService {
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                     resolve();
                 } else if (Date.now() - startTime > timeout) {
-                    reject(new Error('Timeout waiting for WebSocket connectionSocket'));
+                    reject(new Error('Timeout waiting for WebSocket socket'));
                 } else {
                     setTimeout(check, 100);
                 }
@@ -248,7 +248,7 @@ class WebSocketService {
                     console.log('Sent:', message);
                     resolve();
                 } else {
-                    reject(new Error('WebSocket connectionSocket lost during send'));
+                    reject(new Error('WebSocket socket lost during send'));
                 }
             } catch (error) {
                 reject(error);

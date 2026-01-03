@@ -5,7 +5,7 @@ import { UserService } from './UserService';
 
 const WS_URL = process.env.REACT_APP_SOCKET_URL || 'wss://chat.longapp.site/chat/chat';
 
-// Tạo connectionSocket duy nhất
+// Tạo socket duy nhất
 const connection = new WebSocketConnection(WS_URL, {
     maxAttempts: 5,
     initialDelay: 1000,
@@ -13,13 +13,22 @@ const connection = new WebSocketConnection(WS_URL, {
     backoffFactor: 2
 });
 
-// Tạo các service dùng chung connectionSocket
+// Tạo các service dùng chung socket
 const authService = new AuthService(connection);
 const chatService = new ChatService(connection);
 const userService = new UserService(connection);
 
+/**
+ * WebSocketService Facade
+ * * @description
+ * Điểm truy cập duy nhất (Single Point of Entry) cho toàn bộ giao thức truyền thông Real-time.
+ * * TRÁCH NHIỆM:
+ * 1. Cung cấp các phương thức GỬI YÊU CẦU (Request) tới server (Login, Chat, User...).
+ * 2. Quản lý trạng thái kết nối thông qua WebSocketConnection.
+ * 3. Tập hợp các service chuyên biệt (Auth, Chat, User) để dễ quản lý.
+ */
+
 // ===== WEBSOCKET SERVICE FACADE =====
-// Đây là interface duy nhất mà app sẽ dùng
 class WebSocketService {
     // Connection methods
     send = (data: any) => connection.send(data);
