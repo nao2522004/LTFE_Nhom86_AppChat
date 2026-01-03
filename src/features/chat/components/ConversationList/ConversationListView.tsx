@@ -21,6 +21,7 @@ interface ConversationListViewProps {
     // Handlers
     onSelectConversation: (id: string, type: 'room' | 'people', name: string) => void;
     onSearchChange: (value: string) => void;
+    onOpenModal: () => void;
 }
 
 const ConversationListView: React.FC<ConversationListViewProps> = ({
@@ -30,11 +31,45 @@ const ConversationListView: React.FC<ConversationListViewProps> = ({
                                                                        loading,
                                                                        searchQuery,
                                                                        onSelectConversation,
-                                                                       onSearchChange
+                                                                       onSearchChange,
+                                                                       onOpenModal
                                                                    }) => {
     return (
         <div className={styles.listPanel}>
             <SearchBox value={searchQuery} onChange={onSearchChange} />
+
+            <button
+                onClick={onOpenModal}
+                style={{
+                    width: '100%',
+                    padding: '14px 20px',
+                    backgroundColor: '#5d8e85',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 2px 8px rgba(93, 142, 133, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4e7a73';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#5d8e85';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                }}
+            >
+                <i className="fas fa-plus"></i>
+                New Conversation
+            </button>
 
             {loading && <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}
 
