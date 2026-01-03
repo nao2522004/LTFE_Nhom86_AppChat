@@ -15,7 +15,7 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                                                                              onStartChat,
                                                                              userList
                                                                          }) => {
-    const [activeTab, setActiveTab] = useState<'create' | 'join' | 'people'>('create');
+    const [activeTab, setActiveTab] = useState<'create' | 'join' | 'people'>('people');
     const [roomName, setRoomName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
@@ -57,6 +57,18 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
         }
     };
 
+    // NEW: Handle direct username input
+    const handleStartChatWithUsername = async () => {
+        const username = searchQuery.trim();
+
+        if (!username) {
+            setError('Please enter a username');
+            return;
+        }
+
+        await handleStartChat(username);
+    };
+
     const filteredUsers = userList.filter(user =>
         user.username?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -70,6 +82,15 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                 </div>
 
                 <div style={styles.tabs}>
+                    <button
+                        style={{
+                            ...styles.tab,
+                            ...(activeTab === 'people' ? styles.activeTab : {})
+                        }}
+                        onClick={() => setActiveTab('people')}
+                    >
+                        Direct Message
+                    </button>
                     <button
                         style={{
                             ...styles.tab,
@@ -88,15 +109,6 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                     >
                         Join Room
                     </button>
-                    <button
-                        style={{
-                            ...styles.tab,
-                            ...(activeTab === 'people' ? styles.activeTab : {})
-                        }}
-                        onClick={() => setActiveTab('people')}
-                    >
-                        Direct Message
-                    </button>
                 </div>
 
                 <div style={styles.content}>
@@ -106,6 +118,79 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                         </div>
                     )}
 
+                    {/* DIRECT MESSAGE TAB */}
+                    {activeTab === 'people' && (
+                        <div style={styles.formGroup}>
+                            <label style={styles.label}>
+                                Search or enter username
+                            </label>
+
+                            <div style={styles.searchContainer}>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Type username..."
+                                    style={styles.input}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleStartChatWithUsername();
+                                        }
+                                    }}
+                                />
+                                <button
+                                    onClick={handleStartChatWithUsername}
+                                    disabled={loading || !searchQuery.trim()}
+                                    style={{
+                                        ...styles.searchBtn,
+                                        ...(loading || !searchQuery.trim() ? styles.searchBtnDisabled : {})
+                                    }}
+                                >
+                                    {loading ? 'Checking...' : 'Start Chat'}
+                                </button>
+                            </div>
+
+                            <div style={styles.divider}>
+                                <span style={styles.dividerText}>or select from your list</span>
+                            </div>
+
+                            <div style={styles.userList}>
+                                {filteredUsers.length === 0 ? (
+                                    <div style={styles.emptyState}>
+                                        {searchQuery ? 'No users found in your list' : 'No users available'}
+                                    </div>
+                                ) : (
+                                    filteredUsers.map((user: any) => (
+                                        <div
+                                            key={user.id || user.username}
+                                            style={styles.userItem}
+                                            onClick={() => handleStartChat(user.username)}
+                                        >
+                                            <img
+                                                src={user.avatar || `https://i.pravatar.cc/150?img=${user.id || 3}`}
+                                                alt={user.username}
+                                                style={styles.avatar}
+                                            />
+                                            <div style={styles.userInfo}>
+                                                <div style={styles.userName}>
+                                                    {user.displayName || user.username}
+                                                </div>
+                                                <div style={styles.userStatus}>
+                                                    <span style={{
+                                                        ...styles.statusDot,
+                                                        backgroundColor: user.isOnline ? '#28a745' : '#999'
+                                                    }} />
+                                                    {user.isOnline ? 'Online' : 'Offline'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CREATE/JOIN ROOM TABS */}
                     {(activeTab === 'create' || activeTab === 'join') && (
                         <div style={styles.formGroup}>
                             <label style={styles.label}>
@@ -129,52 +214,6 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                             >
                                 {loading ? 'Processing...' : activeTab === 'create' ? 'Create Room' : 'Join Room'}
                             </button>
-                        </div>
-                    )}
-
-                    {activeTab === 'people' && (
-                        <div style={styles.formGroup}>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search users..."
-                                style={styles.input}
-                            />
-
-                            <div style={styles.userList}>
-                                {filteredUsers.length === 0 ? (
-                                    <div style={styles.emptyState}>
-                                        {searchQuery ? 'No users found' : 'No users available'}
-                                    </div>
-                                ) : (
-                                    filteredUsers.map((user: any) => (
-                                        <div
-                                            key={user.id || user.username}
-                                            style={styles.userItem}
-                                            onClick={() => handleStartChat(user.username)}
-                                        >
-                                            <img
-                                                src={user.avatar || `https://i.pravatar.cc/150?img=${user.id || 3}`}
-                                                alt={user.username}
-                                                style={styles.avatar}
-                                            />
-                                            <div style={styles.userInfo}>
-                                                <div style={styles.userName}>
-                                                    {user.displayName || user.username}
-                                                </div>
-                                                <div style={styles.userStatus}>
-                          <span style={{
-                              ...styles.statusDot,
-                              backgroundColor: user.isOnline ? '#28a745' : '#999'
-                          }} />
-                                                    {user.isOnline ? 'Online' : 'Offline'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
                         </div>
                     )}
                 </div>
@@ -279,13 +318,47 @@ const styles: { [key: string]: React.CSSProperties } = {
         color: '#333',
         marginBottom: '8px'
     },
+    searchContainer: {
+        display: 'flex',
+        gap: '8px'
+    },
     input: {
+        flex: 1,
         padding: '12px 16px',
         border: '1px solid #ddd',
         borderRadius: '8px',
         fontSize: '14px',
         outline: 'none',
         transition: 'border-color 0.3s'
+    },
+    searchBtn: {
+        padding: '12px 20px',
+        backgroundColor: '#5d8e85',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s',
+        whiteSpace: 'nowrap'
+    },
+    searchBtnDisabled: {
+        opacity: 0.5,
+        cursor: 'not-allowed'
+    },
+    divider: {
+        position: 'relative',
+        textAlign: 'center',
+        margin: '16px 0'
+    },
+    dividerText: {
+        backgroundColor: 'white',
+        padding: '0 10px',
+        color: '#999',
+        fontSize: '12px',
+        position: 'relative',
+        zIndex: 1
     },
     submitBtn: {
         padding: '12px',
@@ -303,7 +376,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         cursor: 'not-allowed'
     },
     userList: {
-        maxHeight: '400px',
+        maxHeight: '300px',
         overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',

@@ -86,10 +86,10 @@ export class WebSocketConnection {
         this.ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
-                // console.log('%c[WebSocket] Message received',
-                //     'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
-                //     message
-                // );
+                console.log('%c[WebSocket] Message received',
+                    'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
+                    message
+                );
 
                 if (message.event) {
                     this.triggerHandlers(message.event, message);
@@ -160,6 +160,15 @@ export class WebSocketConnection {
         return new Promise((resolve, reject) => {
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                 this.ws.send(JSON.stringify(data));
+                console.log('%c[SEND] WebSocket Message',
+                    'background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold',
+                    {
+                        event: data.data?.event,
+                        payload: data.data?.data,
+                        fullMessage: data,
+                        timestamp: new Date().toISOString()
+                    }
+                );
                 resolve();
             } else {
                 reject(new Error('WebSocket not connected'));

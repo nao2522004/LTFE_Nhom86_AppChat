@@ -7,7 +7,7 @@ import {
     selectRooms,
     selectActiveRoomId,
     selectUserList,
-    selectChatLoading, createRoom, joinRoom, checkUser
+    selectChatLoading, createRoom, joinRoom, checkUserExist
 } from '../chatSlice';
 import ConversationListView from '../components/ConversationList/ConversationListView';
 import CreateConversationModal from '../components/ConversationList/CreateConversationModal';
@@ -19,20 +19,12 @@ import CreateConversationModal from '../components/ConversationList/CreateConver
 const ConversationListContainer: React.FC = () => {
     const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
+    const [showModal, setShowModal] = useState(false);
+
     const rooms = useAppSelector(selectRooms);
     const activeRoomId = useAppSelector(selectActiveRoomId);
     const userList = useAppSelector(selectUserList);
     const loading = useAppSelector(selectChatLoading);
-    const [showModal, setShowModal] = useState(false);
-
-    // useEffect(() => {
-    //     console.log('ConversationList Data:', {
-    //         rooms: rooms.length,
-    //         users: userList.length,
-    //         roomsData: rooms,
-    //         usersData: userList
-    //     });
-    // }, [rooms, userList]);
 
     // ========== EVENT HANDLERS ==========
     const handleSelectConversation = useCallback(async (
@@ -45,9 +37,9 @@ const ConversationListContainer: React.FC = () => {
 
         // Load messages
         if (type === 'room') {
-            await dispatch(getRoomMessages({roomName: name, page: 1}));
+            await dispatch(getRoomMessages({name: name, page: 1}));
         } else {
-            await dispatch(getPeopleMessages({userName: name, page: 1}));
+            await dispatch(getPeopleMessages({name: name, page: 1}));
         }
     }, [dispatch]);
 
@@ -56,23 +48,79 @@ const ConversationListContainer: React.FC = () => {
     }, []);
 
     const handleCreateRoom = async (roomName: string) => {
-        await dispatch(createRoom(roomName));
-        await dispatch(joinRoom(roomName)); // Auto join after create
-        // Load messages
-        await dispatch(getRoomMessages({roomName, page: 1}));
+        try {
+            await dispatch(createRoom(roomName)).unwrap();
+            await dispatch(joinRoom(roomName)).unwrap();
+            // Set active và load messages
+            dispatch(setActiveRoom(roomName));
+            await dispatch(getRoomMessages({name: roomName, page: 1}));
+        } catch (error) {
+            console.error('Failed to create room:', error);
+            throw error;
+        }
     };
 
     const handleJoinRoom = async (roomName: string) => {
-        await dispatch(joinRoom(roomName));
-        await dispatch(getRoomMessages({roomName, page: 1}));
+        try {
+            await dispatch(joinRoom(roomName)).unwrap();
+            // Set active và load messages
+            dispatch(setActiveRoom(roomName));
+            await dispatch(getRoomMessages({name: roomName, page: 1}));
+        } catch (error) {
+            console.error('Failed to join room:', error);
+            throw error;
+        }
     };
 
     const handleStartChat = async (username: string) => {
-        // Check if user exists first
-        await dispatch(checkUser(username));
-        // Set as active and load messages
-        dispatch(setActiveRoom(username));
-        await dispatch(getPeopleMessages({userName: username, page: 1}));
+        try {
+            console.log('Starting chat with:', username);
+
+            const result = await dispatch(checkUserExist(username));
+
+            console.log('Full result:', result);
+
+            if (checkUserExist.fulfilled.match(result)) {
+                const payload = result.payload;
+
+                console.log('Fulfilled payload:', payload);
+
+                // FIX: Check payload.status instead of payload.exists
+                let exists = false;
+
+                if (typeof payload === 'object' && payload !== null) {
+                    // Ưu tiên check `status` field (theo response từ server)
+                    if ('status' in payload) {
+                        exists = payload.status === true || payload.status === 'success';
+                    }
+                    // Fallback: check `exists` field
+                    else if ('exists' in payload) {
+                        exists = payload.exists === true;
+                    }
+                    // Fallback: check `user` field
+                    else if ('user' in payload) {
+                        exists = true;
+                    }
+                }
+
+                console.log('Final exists value:', exists);
+
+                if (!exists) {
+                    throw new Error('User không tồn tại');
+                }
+
+                // Nếu user tồn tại, tiếp tục load messages
+                dispatch(setActiveRoom(username));
+                await dispatch(getPeopleMessages({name: username, page: 1}));
+
+            } else if (checkUserExist.rejected.match(result)) {
+                console.error('Rejected:', result);
+                throw new Error(result.payload as string || 'Không thể kiểm tra user');
+            }
+        } catch (error: any) {
+            console.error('Error:', error);
+            throw error;
+        }
     };
 
     // ========== FILTER DATA ==========
@@ -81,7 +129,8 @@ const ConversationListContainer: React.FC = () => {
     );
 
     const filteredUsers = userList.filter((user: any) =>
-        user.username?.toLowerCase().includes(searchQuery.toLowerCase())
+        user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // ========== RENDER VIEW ==========
