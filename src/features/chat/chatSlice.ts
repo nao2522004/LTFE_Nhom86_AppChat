@@ -137,7 +137,11 @@ export const getUserList = createAsyncThunk(
     async (_, {rejectWithValue}) => {
         try {
             const response = await websocketService.getUserList();
-            return response.users || [];
+            console.log('getUserList thunk response:', response);
+            return {
+                users: response.users || [],
+                rooms: response.rooms || []
+            };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get user list');
         }
@@ -438,7 +442,28 @@ const chatSlice = createSlice({
             })
             .addCase(getUserList.fulfilled, (state, action) => {
                 state.loading = false;
-                state.userList = action.payload;
+
+                // Update users
+                if (action.payload.users) {
+                    state.userList = action.payload.users;
+                }
+
+                // Update rooms
+                if (action.payload.rooms && action.payload.rooms.length > 0) {
+                    action.payload.rooms.forEach((newRoom: any) => {
+                        const exists = state.rooms.find(
+                            r => r.id === newRoom.id || r.name === newRoom.name
+                        );
+                        if (!exists) {
+                            state.rooms.push(newRoom);
+                        }
+                    });
+                }
+
+                console.log('Loaded:', {
+                    usersCount: state.userList.length,
+                    roomsCount: state.rooms.length
+                });
             })
             .addCase(getUserList.rejected, (state, action) => {
                 state.loading = false;

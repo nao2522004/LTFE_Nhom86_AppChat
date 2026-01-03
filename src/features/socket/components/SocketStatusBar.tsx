@@ -4,7 +4,7 @@ import {
     selectConnectionStatus,
     selectReconnectAttempts,
     selectMaxReconnectAttempts
-} from '../connectionSlice';
+} from '../socketSlice';
 import styles from './SocketStatusBar.module.css'
 
 const SocketStatusBar: React.FC = () => {

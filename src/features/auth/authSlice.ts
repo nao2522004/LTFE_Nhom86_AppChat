@@ -24,6 +24,7 @@ export const login = createAsyncThunk(
     async (credentials: { user: string; pass: string }, { rejectWithValue }) => {
         try {
             websocketService.connect();
+
             await new Promise(resolve => setTimeout(resolve, 500));
             
             const response = await websocketService.login(credentials);
@@ -71,6 +72,7 @@ export const register = createAsyncThunk(
     ) => {
         try {
             websocketService.connect();
+
             await new Promise(resolve => setTimeout(resolve, 500));
             
             const response = await websocketService.register(userData);

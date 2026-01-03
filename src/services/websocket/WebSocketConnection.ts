@@ -1,3 +1,15 @@
+
+/**
+ * WebSocketConnection - Lớp hạ tầng điều khiển kết nối cấp thấp.
+ * * @description
+ * Chịu trách nhiệm duy trì "sự sống" của kết nối:
+ * 1. **Auto-Reconnect**: Tự động kết nối lại với thuật toán Exponential Backoff + Jitter.
+ * 2. **Event Dispatcher**: Phân phối dữ liệu từ Server tới các Service thông qua Pattern Pub/Sub.
+ * 3. **Safety**: Quản lý trạng thái đóng/mở để tránh thất lạc dữ liệu khi gửi.
+ * * @note Không gọi trực tiếp các hàm nghiệp vụ (Chat/Auth) ở đây.
+ * Lớp này chỉ quan tâm đến việc giữ cho đường truyền luôn thông suốt.
+ */
+
 export interface ReconnectionConfig {
     maxAttempts: number;
     initialDelay: number;
@@ -31,9 +43,9 @@ export class WebSocketConnection {
     // ===== KẾT NỐI =====
     connect(): WebSocket {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            console.log('%c[WebSocket] Already connected, triggering open event',
-                'background: #2ecc71; color: white; padding: 2px 6px; border-radius: 3px;'
-            );
+            // console.log('%c[WebSocket] Already connected, triggering open event',
+            //     'background: #2ecc71; color: white; padding: 2px 6px; border-radius: 3px;'
+            // );
 
             // Trigger open handler asynchronously
             setTimeout(() => {
@@ -47,9 +59,9 @@ export class WebSocketConnection {
         }
 
         if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
-            console.log('%c[WebSocket] Already connecting, waiting...',
-                'background: #3498db; color: white; padding: 2px 6px; border-radius: 3px;'
-            );
+            // console.log('%c[WebSocket] Already connecting, waiting...',
+            //     'background: #3498db; color: white; padding: 2px 6px; border-radius: 3px;'
+            // );
             return this.ws;
         }
 
@@ -74,10 +86,10 @@ export class WebSocketConnection {
         this.ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
-                console.log('%c[WebSocket] Message received',
-                    'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
-                    message
-                );
+                // console.log('%c[WebSocket] Message received',
+                //     'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
+                //     message
+                // );
 
                 if (message.event) {
                     this.triggerHandlers(message.event, message);
