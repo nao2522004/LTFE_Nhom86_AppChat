@@ -66,12 +66,12 @@ const ChatWindowContainer: React.FC = () => {
 
         if (activeRoom.type === 'group') {
             await dispatch(getRoomMessages({
-                roomName: activeRoom.name,
+                name: activeRoom.name,
                 page: nextPage
             }));
         } else {
             await dispatch(getPeopleMessages({
-                userName: activeRoom.name,
+                name: activeRoom.name,
                 page: nextPage
             }));
         }

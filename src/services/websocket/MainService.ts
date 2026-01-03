@@ -56,7 +56,8 @@ class WebSocketService {
     offChatReceived = (callback?: any) => chatService.offChatReceived(callback);
 
     // User methods
-    checkUser = (data: any) => userService.checkUser(data);
+    checkUserExist = (username: string) => userService.checkUserExist(username);
+    checkUserOnline = (username: string) => userService.checkUserOnline(username);
     getUserList = () => userService.getUserList();
 }
 

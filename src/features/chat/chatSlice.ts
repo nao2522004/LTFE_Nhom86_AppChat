@@ -68,10 +68,10 @@ export const joinRoom = createAsyncThunk(
  */
 export const getRoomMessages = createAsyncThunk(
     'chat/getRoomMessages',
-    async ({roomName, page}: { roomName: string; page: number }, {rejectWithValue}) => {
+    async ({name, page}: { name: string; page: number }, {rejectWithValue}) => {
         try {
-            const response = await websocketService.getRoomMessages({roomName, page});
-            return {roomName, messages: response.messages || [], page};
+            const response = await websocketService.getRoomMessages({name, page});
+            return {name, messages: response.messages || [], page};
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get room messages');
         }
@@ -84,10 +84,10 @@ export const getRoomMessages = createAsyncThunk(
  */
 export const getPeopleMessages = createAsyncThunk(
     'chat/getPeopleMessages',
-    async ({userName, page}: { userName: string; page: number }, {rejectWithValue}) => {
+    async ({name, page}: { name: string; page: number }, {rejectWithValue}) => {
         try {
-            const response = await websocketService.getPeopleMessages({userName, page});
-            return {userName, messages: response.messages || [], page};
+            const response = await websocketService.getPeopleMessages({name, page});
+            return {name, messages: response.messages || [], page};
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get people messages');
         }
@@ -114,17 +114,76 @@ export const sendChatMessage = createAsyncThunk(
 );
 
 /**
- * CHECK_USER API
- * Request: { "user": "ti" }
+ * CHECK_USER_EXIST API - Kiểm tra user có tồn tại không
  */
-export const checkUser = createAsyncThunk(
-    'chat/checkUser',
+export const checkUserExist = createAsyncThunk(
+    'chat/checkUserExist',
     async (username: string, {rejectWithValue}) => {
         try {
-            const response = await websocketService.checkUser(username);
+            const response = await websocketService.checkUserExist(username);
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to check user');
+        }
+    }
+);
+
+/**
+ * CHECK_USER_ONLINE API - Kiểm tra user có online không
+ */
+export const checkUserOnline = createAsyncThunk(
+    'chat/checkUserOnline',
+    async (username: string, {rejectWithValue}) => {
+        try {
+            const response = await websocketService.checkUserOnline(username);
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to check user online status');
+        }
+    }
+);
+
+/**
+ * START_CHAT_WITH_USER - Bắt đầu chat với user mới
+ * Flow: Check user exist → Add to userList → Load messages
+ */
+export const startChatWithUser = createAsyncThunk(
+    'chat/startChatWithUser',
+    async (username: string, {dispatch, rejectWithValue}) => {
+        try {
+            // 1. Check user exist
+            const existResult = await dispatch(checkUserExist(username)).unwrap();
+
+            if (!existResult.exists) {
+                throw new Error('User does not exist');
+            }
+
+            // 2. Check online status (optional)
+            const onlineResult = await dispatch(checkUserOnline(username)).unwrap();
+
+            // 3. Create user object
+            const user = {
+                id: username,
+                username: username,
+                displayName: existResult.user?.displayName || username,
+                avatar: existResult.user?.avatar || null,
+                isOnline: onlineResult.isOnline || false,
+                lastSeen: onlineResult.lastSeen,
+                type: 'user'
+            };
+
+            // 4. Load messages (page 1)
+            const messagesResult = await dispatch(getPeopleMessages({
+                name: username,
+                page: 1
+            })).unwrap();
+
+            return {
+                user,
+                messages: messagesResult.messages || []
+            };
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to start chat');
         }
     }
 );
@@ -358,19 +417,30 @@ const chatSlice = createSlice({
             })
             .addCase(getRoomMessages.fulfilled, (state, action) => {
                 state.loading = false;
-                const {messages, page} = action.payload;
+                const { messages, page, name } = action.payload;
+
+                const formattedMessages: Message[] = messages.map((msg: any) => ({
+                    id: msg.id.toString(),
+                    content: msg.mes,
+                    sender: {
+                        id: msg.name,
+                        username: msg.name,
+                        displayName: msg.name,
+                        avatar: `https://i.pravatar.cc/150?u=${msg.name}`
+                    },
+                    roomId: name,
+                    timestamp: msg.createAt,
+                    status: 'sent',
+                    type: 'text'
+                }));
 
                 if (page === 1) {
-                    // Replace messages if page 1
-                    state.messages = messages;
+                    state.messages = formattedMessages;
                 } else {
-                    // Append for pagination
-                    const newMessages = messages.filter(
-                        (msg: Message) => !state.messages.find(m => m.id === msg.id)
-                    );
+                    const existingIds = new Set(state.messages.map(m => m.id));
+                    const newMessages = formattedMessages.filter((m: Message) => !existingIds.has(m.id));
                     state.messages = [...state.messages, ...newMessages];
                 }
-
                 state.currentPage = page;
                 state.hasMoreMessages = messages.length > 0;
             })
@@ -387,14 +457,29 @@ const chatSlice = createSlice({
             })
             .addCase(getPeopleMessages.fulfilled, (state, action) => {
                 state.loading = false;
-                const {messages, page} = action.payload;
+                const { messages, page, name } = action.payload;
+
+                // Map dữ liệu từ API sang Interface Message
+                const formattedMessages: Message[] = messages.map((msg: any) => ({
+                    id: msg.id.toString(),
+                    content: msg.mes, // 'alo' từ API
+                    sender: {
+                        id: msg.name, // '22130163' từ API
+                        username: msg.name,
+                        displayName: msg.name,
+                        avatar: `https://i.pravatar.cc/150?u=${msg.name}`
+                    },
+                    roomId: name,
+                    timestamp: msg.createAt, // '2026-01-03 05:19:45'
+                    status: 'sent',
+                    type: 'text'
+                }));
 
                 if (page === 1) {
-                    state.messages = messages;
+                    state.messages = formattedMessages;
                 } else {
-                    const newMessages = messages.filter(
-                        (msg: Message) => !state.messages.find(m => m.id === msg.id)
-                    );
+                    const existingIds = new Set(state.messages.map(m => m.id));
+                    const newMessages = formattedMessages.filter((m: Message) => !existingIds.has(m.id));
                     state.messages = [...state.messages, ...newMessages];
                 }
 
@@ -420,16 +505,62 @@ const chatSlice = createSlice({
                 state.error = action.payload as string;
             });
 
-        // ===== CHECK USER =====
+        // ===== CHECK USER EXIST =====
         builder
-            .addCase(checkUser.pending, (state) => {
+            .addCase(checkUserExist.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(checkUser.fulfilled, (state) => {
+            .addCase(checkUserExist.fulfilled, (state, action) => {
                 state.loading = false;
+                state.error = null;
             })
-            .addCase(checkUser.rejected, (state, action) => {
+            .addCase(checkUserExist.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== CHECK USER ONLINE =====
+        builder
+            .addCase(checkUserOnline.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(checkUserOnline.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+            })
+            .addCase(checkUserOnline.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // ===== START CHAT WITH USER =====
+        builder
+            .addCase(startChatWithUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(startChatWithUser.fulfilled, (state, action) => {
+                state.loading = false;
+
+                // Add user to userList if not exists
+                const exists = state.userList.find(
+                    u => u.username === action.payload.user.username
+                );
+                if (!exists) {
+                    state.userList.push(action.payload.user);
+                }
+
+                // Set active room to this user
+                state.activeRoomId = action.payload.user.username;
+
+                // Load messages
+                state.messages = action.payload.messages;
+                state.currentPage = 1;
+                state.hasMoreMessages = action.payload.messages.length > 0;
+            })
+            .addCase(startChatWithUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
@@ -519,13 +650,37 @@ export const selectIsMessageSending = (messageId: string) => (state: { chat: Cha
 export const selectActiveRoomMessages = (state: { chat: ChatState }) => {
     const {messages, activeRoomId} = state.chat;
     if (!activeRoomId) return [];
-    return messages.filter(m => m.roomId === activeRoomId);
+    console.log("Active ID:", activeRoomId, "First Msg RoomId:", messages[0]?.roomId);
+
+    return messages
+        .filter(m => m.roomId === activeRoomId || m.sender.id === activeRoomId)
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 };
 
 export const selectActiveRoom = (state: { chat: ChatState }) => {
-    const {rooms, activeRoomId} = state.chat;
+    const {rooms, activeRoomId, userList} = state.chat;
     if (!activeRoomId) return null;
-    return rooms.find(r => r.id === activeRoomId) || null;
+
+    // Check if it's a room
+    const room = rooms.find(r => r.id === activeRoomId);
+    if (room) return room;
+
+    // Check if it's a user (private chat)
+    const user = userList.find(u => u.username === activeRoomId || u.id === activeRoomId);
+    if (user) {
+        // Convert user to room format
+        return {
+            id: user.username,
+            name: user.displayName || user.username,
+            type: 'private' as const,
+            participants: [user.username],
+            unreadCount: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+    }
+
+    return null;
 };
 
 export const selectTotalUnreadCount = (state: { chat: ChatState }) => {

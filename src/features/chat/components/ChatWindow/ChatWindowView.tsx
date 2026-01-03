@@ -133,8 +133,8 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                     <MessageBubble
                         key={msg.id}
                         text={msg.content}
-                        time={new Date(msg.timestamp).toLocaleTimeString()}
-                        isSent={msg.sender.id === currentUser?.id || msg.sender.username === currentUser?.username}
+                        time={new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        isSent={msg.sender.username === currentUser?.username}
                         status={msg.status}
                     />
                 ))}
