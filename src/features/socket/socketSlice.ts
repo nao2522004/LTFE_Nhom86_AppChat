@@ -24,46 +24,25 @@ const initialState: ConnectionState = {
 };
 
 // ===== SLICE =====
-const connectionSlice = createSlice({
+const socketSlice = createSlice({
     name: 'connection',
     initialState,
     reducers: {
         // ===== CONNECTION STATUS =====
         setConnecting: (state) => {
-            const prevStatus = state.status;
             state.status = 'connecting';
             state.error = null;
-
-            console.log('%c[REDUX ACTION] setConnecting',
-                'background: #3498db; color: white; padding: 2px 6px; border-radius: 3px;',
-                {
-                    prevStatus,
-                    newStatus: 'connecting',
-                    timestamp: new Date().toISOString()
-                }
-            );
         },
 
         setConnected: (state) => {
-            const prevStatus = state.status;
             state.status = 'connected';
             state.error = null;
             state.reconnectAttempts = 0;
             state.lastConnected = new Date().toISOString();;
             state.isManualDisconnect = false;
-            console.log('%c[REDUX ACTION] setConnected',
-                'background: #28a745; color: white; padding: 2px 6px; border-radius: 3px;',
-                {
-                    prevStatus,
-                    newStatus: 'connected',
-                    timestamp: new Date().toISOString(),
-                    stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
-                }
-            );
         },
 
         setDisconnected: (state, action: PayloadAction<{ isManual?: boolean; error?: string }>) => {
-            const prevStatus = state.status;
             state.status = 'disconnected';
             state.lastDisconnected = new Date().toISOString();;
             state.isManualDisconnect = action.payload.isManual || false;
@@ -71,56 +50,19 @@ const connectionSlice = createSlice({
             if (action.payload.error) {
                 state.error = action.payload.error;
             }
-
-            console.log('%c[REDUX ACTION] setDisconnected',
-                'background: #dc3545; color: white; padding: 2px 6px; border-radius: 3px;',
-                {
-                    prevStatus,
-                    newStatus: 'disconnected',
-                    isManual: state.isManualDisconnect,
-                    error: state.error,
-                    timestamp: new Date().toISOString()
-                }
-            );
         },
 
         setReconnecting: (state) => {
-            const prevStatus = state.status;
             state.status = 'reconnecting';
-            console.log('%c[REDUX ACTION] setReconnecting',
-                'background: #f39c12; color: white; padding: 2px 6px; border-radius: 3px;',
-                {
-                    prevStatus,
-                    newStatus: 'reconnecting',
-                    attempts: state.reconnectAttempts + 1,
-                    max: state.maxReconnectAttempts,
-                    timestamp: new Date().toISOString()
-                }
-            );
         },
 
         // ===== RECONNECTION =====
         incrementReconnectAttempts: (state) => {
             state.reconnectAttempts++;
-            console.log(`%c[REDUX ACTION] incrementReconnectAttempts`,
-                'background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px;',
-                {
-                    attempts: state.reconnectAttempts,
-                    max: state.maxReconnectAttempts
-                }
-            );
         },
 
         resetReconnectAttempts: (state) => {
-            const prevAttempts = state.reconnectAttempts;
             state.reconnectAttempts = 0;
-            console.log('%c[REDUX ACTION] resetReconnectAttempts',
-                'background: #1abc9c; color: white; padding: 2px 6px; border-radius: 3px;',
-                {
-                    prevAttempts,
-                    newAttempts: 0
-                }
-            );
         },
 
         setMaxReconnectAttempts: (state, action: PayloadAction<number>) => {
@@ -130,10 +72,6 @@ const connectionSlice = createSlice({
         // ===== ERROR =====
         setConnectionError: (state, action: PayloadAction<string>) => {
             state.error = action.payload;
-            console.error('%c[REDUX ACTION] setConnectionError',
-                'background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px;',
-                action.payload
-            );
         },
 
         clearConnectionError: (state) => {
@@ -148,10 +86,6 @@ const connectionSlice = createSlice({
             state.lastConnected = null;
             state.lastDisconnected = null;
             state.isManualDisconnect = false;
-            console.log('%c[REDUX ACTION] resetConnection',
-                'background: #95a5a6; color: white; padding: 2px 6px; border-radius: 3px;',
-                'Connection state reset'
-            );
         }
     }
 });
@@ -168,7 +102,7 @@ export const {
     setConnectionError,
     clearConnectionError,
     resetConnection
-} = connectionSlice.actions;
+} = socketSlice.actions;
 
 // ===== SELECTORS =====
 export const selectConnectionStatus = (state: { connection: ConnectionState }) =>
@@ -207,4 +141,4 @@ export const selectConnectionInfo = (state: { connection: ConnectionState }) => 
     isConnected: state.connection.status === 'connected'
 });
 
-export default connectionSlice.reducer;
+export default socketSlice.reducer;

@@ -26,7 +26,7 @@ export const login = createAsyncThunk(
             // Connect WebSocket first
             websocketService.connect();
             
-            // Wait a bit for connectionSocket to establish
+            // Wait a bit for socket to establish
             await new Promise(resolve => setTimeout(resolve, 500));
             
             // Send login request
@@ -89,7 +89,7 @@ export const register = createAsyncThunk(
             // Connect WebSocket first
             websocketService.connect();
             
-            // Wait a bit for connectionSocket to establish
+            // Wait a bit for socket to establish
             await new Promise(resolve => setTimeout(resolve, 500));
             
             // Send register request

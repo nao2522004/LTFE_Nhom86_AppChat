@@ -88,3 +88,32 @@
     background: none;
     color: var(--text-dark-chat);
 }
+
+.newChatBtn {
+    width: 100%;
+    padding: 14px 20px;
+    background-color: #5d8e85;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(93, 142, 133, 0.3);
+}
+
+.newChatBtn:hover {
+    background-color: #4e7a73;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(93, 142, 133, 0.4);
+}
+
+.newChatBtn:active {
+    transform: translateY(0);
+}
