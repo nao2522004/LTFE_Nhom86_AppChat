@@ -23,23 +23,10 @@ export const login = createAsyncThunk(
     'auth/login',
     async (credentials: { user: string; pass: string }, { rejectWithValue }) => {
         try {
-            // Connect WebSocket first
             websocketService.connect();
-            
-            // Wait a bit for connectionSocket to establish
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // Send login request
             const response = await websocketService.login(credentials);
-            
-            // Save to localStorage
-            if (response.RE_LOGIN_CODE) {
-                localStorage.setItem("user", credentials.user);
-                localStorage.setItem("token", response.RE_LOGIN_CODE);
-            }
-            // if (response.user) {
-            //     localStorage.setItem('user', JSON.stringify(response.user));
-            // }
             
             return response;
         } catch (error: any) {
@@ -54,7 +41,6 @@ export const reLogin = createAsyncThunk(
     async (credentials: ReLoginData, { rejectWithValue }) => {
         try {
             websocketService.connect();
-
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const response = await websocketService.reLogin(credentials);
@@ -64,9 +50,7 @@ export const reLogin = createAsyncThunk(
                 localStorage.removeItem("token");
                 websocketService.disconnect();
                 return rejectWithValue("Token timeout or invalid");
-            } 
-
-            localStorage.setItem("token", response.RE_LOGIN_CODE);
+            }
 
             return response;
         } catch(error: any) {
@@ -86,15 +70,10 @@ export const register = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            // Connect WebSocket first
             websocketService.connect();
-            
-            // Wait a bit for connectionSocket to establish
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // Send register request
             const response = await websocketService.register(userData);
-            
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Đăng ký thất bại');
@@ -108,11 +87,8 @@ export const logout = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             await websocketService.logout();
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
             websocketService.disconnect();
         } catch (error: any) {
-            // Still clear local data even if logout fails
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             websocketService.disconnect();
@@ -135,7 +111,6 @@ export const getCurrentUser = createAsyncThunk(
             
             const user = JSON.parse(userStr);
             
-            // Connect WebSocket
             websocketService.connect();
             
             return { user, token };
