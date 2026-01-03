@@ -1,4 +1,5 @@
 .profileContainer {
+    width: 100%;
     background: var(--white);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
