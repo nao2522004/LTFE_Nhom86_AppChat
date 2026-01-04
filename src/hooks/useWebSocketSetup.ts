@@ -12,21 +12,30 @@ import {addMessage, addRoom, getUserList, updateRoom, incrementUnreadCount } fro
 import websocketService from "../services/websocket/MainService";
 
 /**
- * Hook quản lý vòng đời và thiết lập các sự kiện WebSocket toàn cục.
- * * @description
- * Hook này đóng vai trò là "Trạm điều phối dữ liệu" giữa Server và Client:
- * 1. **Kết nối & Lắng nghe**: Đăng ký các sự kiện từ WebSocket Service (Open, Close, Message...).
- * 2. **Xử lý dữ liệu (Middleware)**: Nhận response thô từ Server, chuẩn hóa (transform) về định dạng của App.
- * 3. **Cập nhật Store**: Dispatch dữ liệu đã chuẩn hóa lên Redux Store để UI cập nhật thời gian thực.
- * * @example
- * // Sử dụng duy nhất một lần tại App.tsx
- * useWebSocketSetup();
- * * @notes
- * - **isSetupRef**: Sử dụng kỹ thuật "Ref Gate" để chặn việc đăng ký listener 2 lần trong React Strict Mode (Development).
- * - **userListLoadedRef**: Đảm bảo danh sách người dùng (`getUserList`) chỉ được tải một lần đầu tiên khi kết nối thành công, tránh spam API khi socket tự động reconnect.
- * - **Cleanup**: Tự động gỡ bỏ (off) tất cả listeners khi component unmount để tránh rò rỉ bộ nhớ (Memory Leak).
- * * @requires websocketService - Service điều khiển kết nối Socket.
- * @requires useAppDispatch - Hook để gửi hành động lên Redux Store.
+ * Hook quản lý vòng đời và lắng nghe các Broadcast Responses từ WebSocket Server.
+ *
+ * @description
+ * Hook này đóng vai trò là **Trạm thu phát Broadcast Responses** (không phải gửi request):
+ *
+ * 1. **Lắng nghe Broadcast Responses**:
+ *    - Server gửi response tới NHIỀU clients cùng lúc (broadcast)
+ *    - Ví dụ: SEND_CHAT, USER_ONLINE, JOIN_ROOM, USER_OFFLINE
+ *    - Khác với Request-Response (1-to-1), đây là response dạng 1-to-Many
+ *
+ * 2. **Transform Data (Middleware)**:
+ *    - Nhận response thô từ server: `{ event, status, data, mes }`
+ *    - Chuẩn hóa về format của app (Message interface, Room interface...)
+ *    - Validate data trước khi dispatch
+ *
+ * 3. **Cập nhật Redux Store**:
+ *    - Dispatch actions để cập nhật state (addMessage, updateRoom...)
+ *    - UI tự động re-render theo state mới
+ *
+ * @note
+ * - Hook này **KHÔNG GỌI** các service methods (login, getRoomMessages...)
+ * - Hook này **CHỈ LẮNG NGHE** broadcast responses từ server
+ * - Request-Response (1-to-1) được xử lý bởi các service methods trong components/thunks
+ *
  */
 
 export const useWebSocketSetup = () => {

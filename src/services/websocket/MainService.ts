@@ -1,4 +1,4 @@
-import { WebSocketConnection } from './WebSocketConnection';
+import { SocketConnection } from './SocketConnection';
 import { AuthService } from './AuthService';
 import { ChatService } from './ChatService';
 import { UserService } from './UserService';
@@ -6,7 +6,7 @@ import { UserService } from './UserService';
 const WS_URL = process.env.REACT_APP_SOCKET_URL || 'wss://chat.longapp.site/chat/chat';
 
 // Tạo socket duy nhất
-const connection = new WebSocketConnection(WS_URL, {
+const connection = new SocketConnection(WS_URL, {
     maxAttempts: 5,
     initialDelay: 1000,
     maxDelay: 30000,
@@ -20,12 +20,22 @@ const userService = new UserService(connection);
 
 /**
  * WebSocketService Facade
- * * @description
- * Điểm truy cập duy nhất (Single Point of Entry) cho toàn bộ giao thức truyền thông Real-time.
- * * TRÁCH NHIỆM:
- * 1. Cung cấp các phương thức GỬI YÊU CẦU (Request) tới server (Login, Chat, User...).
- * 2. Quản lý trạng thái kết nối thông qua WebSocketConnection.
- * 3. Tập hợp các service chuyên biệt (Auth, Chat, User) để dễ quản lý.
+ *
+ * @description
+ * Điểm truy cập duy nhất (Single Point of Entry) cho toàn bộ giao thức truyền thông Real-time WebSocket.
+ *
+ * @responsibilities
+ * 1. **Gửi Request**: Cung cấp các phương thức gửi yêu cầu tới server (Login, Chat, User...).
+ * 2. **Nhận Response**: Xử lý 2 loại response từ server:
+ *    - **Request-Response (1-to-1)**: Response chỉ gửi cho client đã gửi request
+ *      - Ví dụ: login(), getUserList(), getRoomMessages()
+ *      - Nhận qua: Promise-based `sendAndWaitForResponse()`
+ *    - **Broadcast Response (1-to-Many)**: Response server gửi cho nhiều clients
+ *      - Ví dụ: SEND_CHAT, USER_ONLINE, JOIN_ROOM
+ *      - Nhận qua: Event listeners trong `useWebSocketSetup`
+ * 3. **Quản lý kết nối**: Duy trì trạng thái kết nối thông qua SocketConnection.
+ * 4. **Facade Pattern**: Tập hợp các service chuyên biệt (Auth, Chat, User) để dễ sử dụng.
+ *
  */
 
 // ===== WEBSOCKET SERVICE FACADE =====
@@ -64,7 +74,7 @@ const websocketService = new WebSocketService();
 export default websocketService;
 
 // Export types
-export * from './WebSocketConnection';
+export * from './SocketConnection';
 export * from './AuthService';
 export * from './ChatService';
 export * from './UserService';
