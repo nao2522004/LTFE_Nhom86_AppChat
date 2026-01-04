@@ -8,8 +8,9 @@ import {
     resetReconnectAttempts,
     setConnectionError,
 } from '../features/socket/socketSlice';
-import {addMessage, addRoom, getUserList, updateRoom, incrementUnreadCount } from '../features/chat/chatSlice';
+import {addMessage, addConversation, getUserList, updateConversation, incrementUnreadCount } from '../features/chat/chatSlice';
 import websocketService from "../services/websocket/MainService";
+import {RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
 
 /**
  * Hook quản lý vòng đời và lắng nghe các Broadcast Responses từ WebSocket Server.
@@ -42,7 +43,7 @@ export const useWebSocketSetup = () => {
     const dispatch = useAppDispatch();
     const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-    const activeRoomId = useAppSelector((state) => state.chat.activeRoomId);
+    const activeConversationId = useAppSelector((state) => state.chat.activeConversationId);
 
     // Track if user list has been loaded
     const userListLoadedRef = useRef(false);
@@ -102,44 +103,50 @@ export const useWebSocketSetup = () => {
         // Nhận tin nhắn mới từ server
         const handleSendChat = (message: any) => {
             if (message.status === 'success' && message.data) {
-                // Transform server message to app Message type
-                const newMessage = {
-                    id: message.data.id || `msg_${Date.now()}`,
-                    content: message.data.mes || message.data.content,
-                    sender: {
-                        id: message.data.from?.id || message.data.from,
-                        username: message.data.from?.username || message.data.from,
-                        displayName: message.data.from?.displayName,
-                        avatar: message.data.from?.avatar
-                    },
-                    roomId: message.data.to || message.data.roomId,
-                    timestamp: message.data.timestamp
+                const state = (dispatch as any).getState();
+                const context: TransformContext = {
+                    conversations: state.chat.conversations.map((c: any) => ({
+                        id: c.id,
+                        name: c.name
+                    })),
+                    users: state.chat.userList.map((u: any) => ({
+                        id: u.id || u.username,
+                        username: u.username
+                    }))
+                };
+                const rawMessage: RawServerMessage = {
+                    id: message.data.id || Date.now(),
+                    mes: message.data.mes || message.data.content,
+                    name: message.data.from || message.data.name,
+                    to: message.data.to,
+                    createAt: message.data.timestamp
                         ? new Date(message.data.timestamp).toISOString()
                         : new Date().toISOString(),
-                    status: 'sent' as const,
-                    type: 'text' as const
+                    type: message.data.type || 0
                 };
 
-                dispatch(addMessage(newMessage));
-                const roomId = message.data.to || message.data.roomId;
+                const transformedMessage = transformServerMessage(rawMessage, context);
 
-                dispatch(updateRoom({
-                    id: roomId,
+                dispatch(addMessage(transformedMessage));
+                const conversationId = message.data.to;
+
+                dispatch(updateConversation({
+                    id: conversationId,
                     updates: {
-                        lastMessage: newMessage,
-                        updatedAt: newMessage.timestamp
+                        lastMessage: transformedMessage,
+                        updatedAt: transformedMessage.timestamp
                     }
                 }));
 
-                if (roomId !== activeRoomId) {
-                    dispatch(incrementUnreadCount(roomId));
+                if (conversationId !== activeConversationId) {
+                    dispatch(incrementUnreadCount(conversationId));
                 }
 
                 console.log('Message processed and room updated:', {
-                    messageId: newMessage.id,
-                    roomId: roomId,
-                    isActiveRoom: roomId === activeRoomId,
-                    unreadIncremented: roomId !== activeRoomId
+                    messageId: transformedMessage.id,
+                    conversationId: conversationId,
+                    isActiveConversation: conversationId === activeConversationId,
+                    unreadIncremented: conversationId !== activeConversationId
                 });
             }
         };
@@ -158,7 +165,7 @@ export const useWebSocketSetup = () => {
         // Room created event
         const handleCreateRoom = (data: any) => {
             if (data.status === 'success' && data.data?.room) {
-                dispatch(addRoom(data.data.room));
+                // Will be handled by createGroupChat.fulfilled in chatSlice
             }
         };
 
@@ -219,7 +226,7 @@ export const useWebSocketSetup = () => {
             userListLoadedRef.current = false;
             isSetupRef.current = false;
         };
-    }, [dispatch, isAuthenticated]);
+    }, [dispatch, isAuthenticated, activeConversationId]);
 };
 
 export default useWebSocketSetup;

@@ -2,7 +2,7 @@ import React from 'react';
 import ConversationItem from './ConversationItem';
 import SearchBox from './SearchBox';
 import styles from './ConversationList.module.css';
-import { Room } from '../../../../shared/types/chat';
+import {Conversation} from '../../../../shared/types/chat';
 
 /**
  * VIEW
@@ -10,9 +10,9 @@ import { Room } from '../../../../shared/types/chat';
  */
 interface ConversationListViewProps {
     // Data
-    rooms: Room[];
+    conversations: Conversation[];
     users: any[];
-    activeRoomId: string | null;
+    activeConversationId: string | null;
 
     // States
     loading: boolean;
@@ -25,9 +25,9 @@ interface ConversationListViewProps {
 }
 
 const ConversationListView: React.FC<ConversationListViewProps> = ({
-                                                                       rooms,
+                                                                       conversations,
                                                                        users,
-                                                                       activeRoomId,
+                                                                       activeConversationId,
                                                                        loading,
                                                                        searchQuery,
                                                                        onSelectConversation,
@@ -74,25 +74,31 @@ const ConversationListView: React.FC<ConversationListViewProps> = ({
             {loading && <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}
 
             {/* Groups Section */}
-            {rooms.length > 0 && (
+            {conversations.length > 0 && (
                 <div>
                     <div className={styles.sectionTitle}>Groups</div>
                     <div className={styles.chatListCard}>
-                        {rooms.map((room) => (
-                            <div
-                                key={room.id}
-                                onClick={() => onSelectConversation(room.id.toString(), 'room', room.name)}
-                            >
-                                <ConversationItem
-                                    avatar="https://i.pravatar.cc/150?img=11"
-                                    name={room.name}
-                                    lastMessage={room.lastMessage?.content || 'No messages yet'}
-                                    time="Today"
-                                    unreadCount={room.unreadCount}
-                                    isActive={room.id.toString() === activeRoomId}
-                                />
-                            </div>
-                        ))}
+                        {conversations
+                            .filter(c => c.type === 'group')
+                            .map((conversation) => (
+                                <div
+                                    key={conversation.id}
+                                    onClick={() => onSelectConversation(
+                                        conversation.id.toString(),
+                                        'room',
+                                        conversation.name
+                                    )}
+                                >
+                                    <ConversationItem
+                                        avatar="https://i.pravatar.cc/150?img=11"
+                                        name={conversation.name}
+                                        lastMessage={conversation.lastMessage?.content || 'No messages yet'}
+                                        time="Today"
+                                        unreadCount={conversation.unreadCount}
+                                        isActive={conversation.id.toString() === activeConversationId}
+                                    />
+                                </div>
+                            ))}
                     </div>
                 </div>
             )}
@@ -116,7 +122,7 @@ const ConversationListView: React.FC<ConversationListViewProps> = ({
                                     name={user.displayName || user.username}
                                     lastMessage={user.lastMessage || 'Start a conversation'}
                                     time="Today"
-                                    isActive={user.id === activeRoomId || user.username === activeRoomId}
+                                    isActive={user.id === activeConversationId || user.username === activeConversationId}
                                     isOnline={user.isOnline}
                                 />
                             </div>

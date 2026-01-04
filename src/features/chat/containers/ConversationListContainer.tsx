@@ -1,13 +1,16 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useAppDispatch, useAppSelector} from '../../../hooks/hooks';
 import {
-    setActiveRoom,
-    getRoomMessages,
-    getPeopleMessages,
-    selectRooms,
-    selectActiveRoomId,
+    setActiveConversation,
+    getGroupChatMessages,
+    getPrivateChatMessages,
+    selectConversations,
+    selectActiveConversationId,
     selectUserList,
-    selectChatLoading, createRoom, joinRoom, checkUserExist
+    selectChatLoading,
+    createGroupChat,
+    joinGroupChat,
+    checkUserExist
 } from '../chatSlice';
 import ConversationListView from '../components/ConversationList/ConversationListView';
 import CreateConversationModal from '../components/ConversationList/CreateConversationModal';
@@ -21,8 +24,8 @@ const ConversationListContainer: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
 
-    const rooms = useAppSelector(selectRooms);
-    const activeRoomId = useAppSelector(selectActiveRoomId);
+    const conversations = useAppSelector(selectConversations);
+    const activeConversationId = useAppSelector(selectActiveConversationId);
     const userList = useAppSelector(selectUserList);
     const loading = useAppSelector(selectChatLoading);
 
@@ -33,13 +36,13 @@ const ConversationListContainer: React.FC = () => {
         name: string
     ) => {
         // Set active room
-        dispatch(setActiveRoom(id));
+        dispatch(setActiveConversation(id));
 
         // Load messages
         if (type === 'room') {
-            await dispatch(getRoomMessages({name: name, page: 1}));
+            await dispatch(getGroupChatMessages({name: name, page: 1}));
         } else {
-            await dispatch(getPeopleMessages({name: name, page: 1}));
+            await dispatch(getPrivateChatMessages({name: name, page: 1}));
         }
     }, [dispatch]);
 
@@ -47,25 +50,25 @@ const ConversationListContainer: React.FC = () => {
         setSearchQuery(value);
     }, []);
 
-    const handleCreateRoom = async (roomName: string) => {
+    const handleCreateGroupChat = async (groupName: string) => {
         try {
-            await dispatch(createRoom(roomName)).unwrap();
-            await dispatch(joinRoom(roomName)).unwrap();
+            await dispatch(createGroupChat(groupName)).unwrap();
+            await dispatch(joinGroupChat(groupName)).unwrap();
             // Set active và load messages
-            dispatch(setActiveRoom(roomName));
-            await dispatch(getRoomMessages({name: roomName, page: 1}));
+            dispatch(setActiveConversation(groupName));
+            await dispatch(getGroupChatMessages({name: groupName, page: 1}));
         } catch (error) {
             console.error('Failed to create room:', error);
             throw error;
         }
     };
 
-    const handleJoinRoom = async (roomName: string) => {
+    const handleJoinGroupChat = async (groupName: string) => {
         try {
-            await dispatch(joinRoom(roomName)).unwrap();
+            await dispatch(joinGroupChat(groupName)).unwrap();
             // Set active và load messages
-            dispatch(setActiveRoom(roomName));
-            await dispatch(getRoomMessages({name: roomName, page: 1}));
+            dispatch(setActiveConversation(groupName));
+            await dispatch(getGroupChatMessages({name: groupName, page: 1}));
         } catch (error) {
             console.error('Failed to join room:', error);
             throw error;
@@ -110,8 +113,8 @@ const ConversationListContainer: React.FC = () => {
                 }
 
                 // Nếu user tồn tại, tiếp tục load messages
-                dispatch(setActiveRoom(username));
-                await dispatch(getPeopleMessages({name: username, page: 1}));
+                dispatch(setActiveConversation(username));
+                await dispatch(getPrivateChatMessages({name: username, page: 1}));
 
             } else if (checkUserExist.rejected.match(result)) {
                 console.error('Rejected:', result);
@@ -124,8 +127,8 @@ const ConversationListContainer: React.FC = () => {
     };
 
     // ========== FILTER DATA ==========
-    const filteredRooms = rooms.filter(room =>
-        room.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredConversations = conversations.filter(conversation =>
+        conversation.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const filteredUsers = userList.filter((user: any) =>
@@ -138,9 +141,9 @@ const ConversationListContainer: React.FC = () => {
         <>
             <ConversationListView
                 // Data
-                rooms={filteredRooms}
+                conversations={filteredConversations}
                 users={filteredUsers}
-                activeRoomId={activeRoomId}
+                activeConversationId={activeConversationId}
 
                 // States
                 loading={loading}
@@ -156,8 +159,8 @@ const ConversationListContainer: React.FC = () => {
             {showModal && (
                 <CreateConversationModal
                     onClose={() => setShowModal(false)}
-                    onCreateRoom={handleCreateRoom}
-                    onJoinRoom={handleJoinRoom}
+                    onCreateGroupChat={handleCreateGroupChat}
+                    onJoinGroupChat={handleJoinGroupChat}
                     onStartChat={handleStartChat}
                     userList={userList}
                 />

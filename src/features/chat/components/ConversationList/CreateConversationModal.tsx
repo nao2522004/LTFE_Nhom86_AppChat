@@ -2,28 +2,28 @@ import React, { useState } from 'react';
 
 interface CreateConversationModalProps {
     onClose: () => void;
-    onCreateRoom: (roomName: string) => Promise<void>;
-    onJoinRoom: (roomName: string) => Promise<void>;
+    onCreateGroupChat: (groupName: string) => Promise<void>;
+    onJoinGroupChat: (groupName: string) => Promise<void>;
     onStartChat: (username: string) => Promise<void>;
     userList: any[];
 }
 
 const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                                                                              onClose,
-                                                                             onCreateRoom,
-                                                                             onJoinRoom,
+                                                                             onCreateGroupChat,
+                                                                             onJoinGroupChat,
                                                                              onStartChat,
                                                                              userList
                                                                          }) => {
     const [activeTab, setActiveTab] = useState<'create' | 'join' | 'people'>('people');
-    const [roomName, setRoomName] = useState('');
+    const [groupName, setGroupName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleSubmit = async () => {
-        if (!roomName.trim() && activeTab !== 'people') {
-            setError('Please enter a room name');
+        if (!groupName.trim() && activeTab !== 'people') {
+            setError('Please enter a group name');
             return;
         }
 
@@ -32,9 +32,9 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
 
         try {
             if (activeTab === 'create') {
-                await onCreateRoom(roomName);
+                await onCreateGroupChat(groupName);
             } else if (activeTab === 'join') {
-                await onJoinRoom(roomName);
+                await onJoinGroupChat(groupName);
             }
             onClose();
         } catch (err: any) {
@@ -98,7 +98,7 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                         }}
                         onClick={() => setActiveTab('create')}
                     >
-                        Create Room
+                        Create Group
                     </button>
                     <button
                         style={{
@@ -107,7 +107,7 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                         }}
                         onClick={() => setActiveTab('join')}
                     >
-                        Join Room
+                        Join Group
                     </button>
                 </div>
 
@@ -190,29 +190,29 @@ const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
                         </div>
                     )}
 
-                    {/* CREATE/JOIN ROOM TABS */}
+                    {/* CREATE/JOIN GROUP TABS */}
                     {(activeTab === 'create' || activeTab === 'join') && (
                         <div style={styles.formGroup}>
                             <label style={styles.label}>
-                                {activeTab === 'create' ? 'Room Name' : 'Enter Room Name'}
+                                {activeTab === 'create' ? 'Group Name' : 'Enter Group Name'}
                             </label>
                             <input
                                 type="text"
-                                value={roomName}
-                                onChange={(e) => setRoomName(e.target.value)}
-                                placeholder="Enter room name..."
+                                value={groupName}
+                                onChange={(e) => setGroupName(e.target.value)}
+                                placeholder="Enter group name..."
                                 style={styles.input}
                                 disabled={loading}
                             />
                             <button
                                 onClick={handleSubmit}
-                                disabled={loading || !roomName.trim()}
+                                disabled={loading || !groupName.trim()}
                                 style={{
                                     ...styles.submitBtn,
-                                    ...(loading || !roomName.trim() ? styles.submitBtnDisabled : {})
+                                    ...(loading || !groupName.trim() ? styles.submitBtnDisabled : {})
                                 }}
                             >
-                                {loading ? 'Processing...' : activeTab === 'create' ? 'Create Room' : 'Join Room'}
+                                {loading ? 'Processing...' : activeTab === 'create' ? 'Create Group' : 'Join Room'}
                             </button>
                         </div>
                     )}

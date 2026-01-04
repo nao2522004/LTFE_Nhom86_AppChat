@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import {
-    selectActiveRoomMessages,
-    selectActiveRoom,
+    selectActiveConversationMessages,
+    selectActiveConversation,
     selectChatError,
     selectChatLoading,
     selectCurrentPage,
     selectHasMoreMessages,
     sendChatMessage,
-    getRoomMessages,
-    getPeopleMessages
+    getGroupChatMessages,
+    getPrivateChatMessages
 } from '../chatSlice';
 import { selectIsConnected } from '../../socket/socketSlice';
 import ChatWindowView from '../components/ChatWindow/ChatWindowView';
@@ -24,8 +24,8 @@ const ChatWindowContainer: React.FC = () => {
     const chatBodyRef = useRef<HTMLDivElement>(null);
 
     // ========== SELECTORS (Đọc từ MODEL) ==========
-    const messages = useAppSelector(selectActiveRoomMessages);
-    const activeRoom = useAppSelector(selectActiveRoom);
+    const messages = useAppSelector(selectActiveConversationMessages);
+    const activeConversation  = useAppSelector(selectActiveConversation);
     const loading = useAppSelector(selectChatLoading);
     const error = useAppSelector(selectChatError);
     const currentPage = useAppSelector(selectCurrentPage);
@@ -43,45 +43,45 @@ const ChatWindowContainer: React.FC = () => {
 
     // ========== EVENT HANDLERS (CONTROLLER LOGIC) ==========
     const handleSendMessage = useCallback(async (text: string) => {
-        if (!activeRoom || !isConnected) {
+        if (!activeConversation || !isConnected) {
             console.error('Cannot send message: no active room or not connected');
             return;
         }
 
         try {
             await dispatch(sendChatMessage({
-                type: activeRoom.type === 'group' ? 'room' : 'people',
-                to: activeRoom.name,
+                type: activeConversation.type === 'group' ? 'room' : 'people',
+                to: activeConversation.name,
                 mes: text
             }));
         } catch (error) {
             console.error('Failed to send message:', error);
         }
-    }, [dispatch, activeRoom, isConnected]);
+    }, [dispatch, activeConversation, isConnected]);
 
     const handleLoadMore = useCallback(async () => {
-        if (!activeRoom || !hasMoreMessages || loading) return;
+        if (!activeConversation || !hasMoreMessages || loading) return;
 
         const nextPage = currentPage + 1;
 
-        if (activeRoom.type === 'group') {
-            await dispatch(getRoomMessages({
-                name: activeRoom.name,
+        if (activeConversation.type === 'group') {
+            await dispatch(getGroupChatMessages({
+                name: activeConversation.name,
                 page: nextPage
             }));
         } else {
-            await dispatch(getPeopleMessages({
-                name: activeRoom.name,
+            await dispatch(getPrivateChatMessages({
+                name: activeConversation.name,
                 page: nextPage
             }));
         }
-    }, [dispatch, activeRoom, hasMoreMessages, loading, currentPage]);
+    }, [dispatch, activeConversation, hasMoreMessages, loading, currentPage]);
 
     // ========== RENDER VIEW ==========
     return (
         <ChatWindowView
             // Data
-            activeRoom={activeRoom}
+            activeConversation={activeConversation}
             messages={messages}
             currentUser={currentUser}
 

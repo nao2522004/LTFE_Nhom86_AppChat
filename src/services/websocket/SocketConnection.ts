@@ -105,7 +105,12 @@ export class SocketConnection {
                 const message = JSON.parse(event.data);
                 console.log('%c[WebSocket] Message received',
                     'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
-                    message
+                    {
+                        event: message.event,
+                        status: message.status,
+                        fullMessage: message,
+                        timestamp: new Date().toISOString()
+                    }
                 );
 
                 if (message.event) {
