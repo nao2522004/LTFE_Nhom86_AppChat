@@ -1,12 +1,12 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {Message, Room} from "../../shared/types/chat";
+import {Message, Conversation, RawServerMessage, transformServerMessage, TransformContext} from "../../shared/types/chat";
 import websocketService from "../../services/websocket/MainService";
 
 interface ChatState {
     messages: Message[];
-    rooms: Room[];
-    activeRoomId: string | null;
-    activeRoomIds: string[];
+    conversations: Conversation[];
+    activeConversationId: string | null;
+    subscribedConversationIds: string[];
     loading: boolean;
     error: string | null;
     sendingMessages: string[];
@@ -18,9 +18,9 @@ interface ChatState {
 // ===== INITIAL STATE =====
 const initialState: ChatState = {
     messages: [],
-    rooms: [],
-    activeRoomId: null,
-    activeRoomIds: [],
+    conversations: [],
+    activeConversationId: null,
+    subscribedConversationIds: [],
     loading: false,
     error: null,
     sendingMessages: [],
@@ -34,14 +34,14 @@ const initialState: ChatState = {
  * EVENT: CREATE_ROOM API
  * Request: DATA: { "name": "ABC" }
  */
-export const createRoom = createAsyncThunk(
-    'chat/createRoom',
-    async (roomName: string, {rejectWithValue}) => {
+export const createGroupChat = createAsyncThunk(
+    'chat/createGroupChat',
+    async (groupName: string, {rejectWithValue}) => {
         try {
-            const response = await websocketService.createRoom(roomName);
+            const response = await websocketService.createGroupChat(groupName);
             return response;
         } catch (error: any) {
-            return rejectWithValue(error.message || 'Failed to create room');
+            return rejectWithValue(error.message || 'Failed to create group chat');
         }
     }
 );
@@ -50,11 +50,11 @@ export const createRoom = createAsyncThunk(
  * EVENT: JOIN_ROOM API
  * Request: DATA: { "name": "ABC" }
  */
-export const joinRoom = createAsyncThunk(
-    'chat/joinRoom',
-    async (roomName: string, {rejectWithValue}) => {
+export const joinGroupChat = createAsyncThunk(
+    'chat/joinGroupChat',
+    async (groupName: string, {rejectWithValue}) => {
         try {
-            const response = await websocketService.joinRoom(roomName);
+            const response = await websocketService.joinGroupChat(groupName);
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to join room');
@@ -66,14 +66,25 @@ export const joinRoom = createAsyncThunk(
  * GET_ROOM_CHAT_MES API
  * Request: { "name": "ABC", "page": 1 }
  */
-export const getRoomMessages = createAsyncThunk(
-    'chat/getRoomMessages',
-    async ({name, page}: { name: string; page: number }, {rejectWithValue}) => {
+export const getGroupChatMessages = createAsyncThunk(
+    'chat/getGroupChatMessages',
+    async ({name, page}: { name: string; page: number }, {rejectWithValue, getState}) => {
         try {
-            const response = await websocketService.getRoomMessages({name, page});
-            return {name, messages: response.messages || [], page};
+            const response = await websocketService.getGroupChatMessages({name, page});
+            const state = getState() as any;
+            const context: TransformContext = {
+                conversations: state.chat.conversations.map((c: Conversation) => ({
+                    id: c.id,
+                    name: c.name
+                })),
+                users: state.chat.userList.map((u: any) => ({
+                    id: u.id || u.username,
+                    username: u.username
+                }))
+            };
+            return {name, messages: response.messages || [], page, context};
         } catch (error: any) {
-            return rejectWithValue(error.message || 'Failed to get room messages');
+            return rejectWithValue(error.message || 'Failed to get group chat messages');
         }
     }
 );
@@ -82,12 +93,23 @@ export const getRoomMessages = createAsyncThunk(
  * GET_PEOPLE_CHAT_MES API
  * Request: { "name": "ti", "page": 1 }
  */
-export const getPeopleMessages = createAsyncThunk(
-    'chat/getPeopleMessages',
-    async ({name, page}: { name: string; page: number }, {rejectWithValue}) => {
+export const getPrivateChatMessages = createAsyncThunk(
+    'chat/getPrivateChatMessages',
+    async ({name, page}: { name: string; page: number }, {rejectWithValue, getState}) => {
         try {
-            const response = await websocketService.getPeopleMessages({name, page});
-            return {name, messages: response.messages || [], page};
+            const response = await websocketService.getPrivateChatMessages({name, page});
+            const state = getState() as any;
+            const context: TransformContext = {
+                conversations: state.chat.conversations.map((c: Conversation) => ({
+                    id: c.id,
+                    name: c.name
+                })),
+                users: state.chat.userList.map((u: any) => ({
+                    id: u.id || u.username,
+                    username: u.username
+                }))
+            };
+            return {name, messages: response.messages || [], page, context};
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get people messages');
         }
@@ -173,7 +195,7 @@ export const startChatWithUser = createAsyncThunk(
             };
 
             // 4. Load messages (page 1)
-            const messagesResult = await dispatch(getPeopleMessages({
+            const messagesResult = await dispatch(getPrivateChatMessages({
                 name: username,
                 page: 1
             })).unwrap();
@@ -199,7 +221,7 @@ export const getUserList = createAsyncThunk(
             console.log('getUserList thunk response:', response);
             return {
                 users: response.users || [],
-                rooms: response.rooms || []
+                conversations: response.conversations || []
             };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to get user list');
@@ -266,67 +288,67 @@ const chatSlice = createSlice({
             }
         },
 
-        // ===== ROOMS =====
-        addRoom: (state, action: PayloadAction<Room>) => {
-            const exists = state.rooms.find(r => r.id === action.payload.id);
+        // ===== CONVERSATIONS =====
+        addConversation: (state, action: PayloadAction<Conversation>) => {
+            const exists = state.conversations.find(c => c.id === action.payload.id);
             if (!exists) {
-                state.rooms.push(action.payload);
+                state.conversations.push(action.payload);
             }
         },
 
-        updateRoom: (state, action: PayloadAction<{ id: string; updates: Partial<Room> }>) => {
-            const index = state.rooms.findIndex(r => r.id === action.payload.id);
+        updateConversation: (state, action: PayloadAction<{ id: string; updates: Partial<Conversation> }>) => {
+            const index = state.conversations.findIndex(c => c.id === action.payload.id);
             if (index !== -1) {
-                state.rooms[index] = {
-                    ...state.rooms[index],
+                state.conversations[index] = {
+                    ...state.conversations[index],
                     ...action.payload.updates
                 };
             }
         },
 
-        removeRoom: (state, action: PayloadAction<string>) => {
-            state.rooms = state.rooms.filter(r => r.id !== action.payload);
+        removeConversation: (state, action: PayloadAction<string>) => {
+            state.conversations = state.conversations.filter(c => c.id !== action.payload);
         },
 
-        setRooms: (state, action: PayloadAction<Room[]>) => {
-            state.rooms = action.payload;
+        setConversations: (state, action: PayloadAction<Conversation[]>) => {
+            state.conversations = action.payload;
         },
 
-        // ===== ACTIVE ROOM =====
-        setActiveRoom: (state, action: PayloadAction<string | null>) => {
-            state.activeRoomId = action.payload;
+        // ===== ACTIVE CONVERSATION =====
+        setActiveConversation: (state, action: PayloadAction<string | null>) => {
+            state.activeConversationId  = action.payload;
 
-            // Clear unread count for active room
+            // Clear unread count for active conversation
             if (action.payload) {
-                const room = state.rooms.find(r => r.id === action.payload);
-                if (room) {
-                    room.unreadCount = 0;
+                const conversation  = state.conversations.find(c => c.id === action.payload);
+                if (conversation ) {
+                    conversation .unreadCount = 0;
                 }
             }
         },
 
         incrementUnreadCount: (state, action: PayloadAction<string>) => {
-            const room = state.rooms.find(r => r.id === action.payload);
-            if (room && room.id !== state.activeRoomId) {
-                room.unreadCount++;
+            const conversation = state.conversations.find(c => c.id === action.payload);
+            if (conversation && conversation.id !== state.activeConversationId) {
+                conversation.unreadCount++;
             }
         },
 
-        // ===== ACTIVE ROOM IDS =====
-        addActiveRoom: (state, action: PayloadAction<string>) => {
-            if (!state.activeRoomIds.includes(action.payload)) {
-                state.activeRoomIds.push(action.payload);
+        // ===== ACTIVE CONVERSATION IDS =====
+        addSubscribedConversation: (state, action: PayloadAction<string>) => {
+            if (!state.subscribedConversationIds.includes(action.payload)) {
+                state.subscribedConversationIds.push(action.payload);
             }
         },
 
-        removeActiveRoom: (state, action: PayloadAction<string>) => {
-            state.activeRoomIds = state.activeRoomIds.filter(
+        removeSubscribedConversation: (state, action: PayloadAction<string>) => {
+            state.subscribedConversationIds = state.subscribedConversationIds.filter(
                 id => id !== action.payload
             );
         },
 
-        setActiveRoomIds: (state, action: PayloadAction<string[]>) => {
-            state.activeRoomIds = action.payload;
+        setSubscribedConversationIds: (state, action: PayloadAction<string[]>) => {
+            state.subscribedConversationIds = action.payload;
         },
 
         // ===== LOADING & ERROR =====
@@ -354,9 +376,9 @@ const chatSlice = createSlice({
         // ===== RESET =====
         resetChat: (state) => {
             state.messages = [];
-            state.rooms = [];
-            state.activeRoomId = null;
-            state.activeRoomIds = [];
+            state.conversations = [];
+            state.activeConversationId = null;
+            state.subscribedConversationIds = [];
             state.loading = false;
             state.error = null;
             state.sendingMessages = [];
@@ -370,69 +392,58 @@ const chatSlice = createSlice({
     extraReducers: (builder) => {
         // ===== CREATE ROOM =====
         builder
-            .addCase(createRoom.pending, (state) => {
+            .addCase(createGroupChat.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(createRoom.fulfilled, (state, action) => {
+            .addCase(createGroupChat.fulfilled, (state, action) => {
                 state.loading = false;
                 // Add room to list if returned from API
                 if (action.payload.room) {
-                    const exists = state.rooms.find(r => r.id === action.payload.room.id);
+                    const exists = state.conversations.find(c => c.id === action.payload.room.id);
                     if (!exists) {
-                        state.rooms.push(action.payload.room);
+                        state.conversations.push(action.payload.room);
                     }
                 }
             })
-            .addCase(createRoom.rejected, (state, action) => {
+            .addCase(createGroupChat.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
-        // ===== JOIN ROOM =====
+        // ===== JOIN GROUP CHAT =====
         builder
-            .addCase(joinRoom.pending, (state) => {
+            .addCase(joinGroupChat.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(joinRoom.fulfilled, (state, action) => {
+            .addCase(joinGroupChat.fulfilled, (state, action) => {
                 state.loading = false;
                 // Subscribe to room after joining
-                if (action.payload.roomName) {
-                    if (!state.activeRoomIds.includes(action.payload.roomName)) {
-                        state.activeRoomIds.push(action.payload.roomName);
+                if (action.payload.groupName) {
+                    if (!state.subscribedConversationIds.includes(action.payload.groupName)) {
+                        state.subscribedConversationIds.push(action.payload.groupName);
                     }
                 }
             })
-            .addCase(joinRoom.rejected, (state, action) => {
+            .addCase(joinGroupChat.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
-        // ===== GET ROOM MESSAGES =====
+        // ===== GET GROUP CHAT MESSAGES =====
         builder
-            .addCase(getRoomMessages.pending, (state) => {
+            .addCase(getGroupChatMessages.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getRoomMessages.fulfilled, (state, action) => {
+            .addCase(getGroupChatMessages.fulfilled, (state, action) => {
                 state.loading = false;
-                const { messages, page, name } = action.payload;
+                const { messages, page, context } = action.payload;
 
-                const formattedMessages: Message[] = messages.map((msg: any) => ({
-                    id: msg.id.toString(),
-                    content: msg.mes,
-                    sender: {
-                        id: msg.name,
-                        username: msg.name,
-                        displayName: msg.name,
-                        avatar: `https://i.pravatar.cc/150?u=${msg.name}`
-                    },
-                    roomId: name,
-                    timestamp: msg.createAt,
-                    status: 'sent',
-                    type: 'text'
-                }));
+                const formattedMessages: Message[] = messages.map((raw: RawServerMessage) =>
+                    transformServerMessage(raw, context)
+                );
 
                 if (page === 1) {
                     state.messages = formattedMessages;
@@ -444,36 +455,24 @@ const chatSlice = createSlice({
                 state.currentPage = page;
                 state.hasMoreMessages = messages.length > 0;
             })
-            .addCase(getRoomMessages.rejected, (state, action) => {
+            .addCase(getGroupChatMessages.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
-        // ===== GET PEOPLE MESSAGES =====
+        // ===== GET PRIVATE CHAT MESSAGES =====
         builder
-            .addCase(getPeopleMessages.pending, (state) => {
+            .addCase(getPrivateChatMessages.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getPeopleMessages.fulfilled, (state, action) => {
+            .addCase(getPrivateChatMessages.fulfilled, (state, action) => {
                 state.loading = false;
-                const { messages, page, name } = action.payload;
+                const { messages, page, context } = action.payload;
 
-                // Map dữ liệu từ API sang Interface Message
-                const formattedMessages: Message[] = messages.map((msg: any) => ({
-                    id: msg.id.toString(),
-                    content: msg.mes, // 'alo' từ API
-                    sender: {
-                        id: msg.name, // '22130163' từ API
-                        username: msg.name,
-                        displayName: msg.name,
-                        avatar: `https://i.pravatar.cc/150?u=${msg.name}`
-                    },
-                    roomId: name,
-                    timestamp: msg.createAt, // '2026-01-03 05:19:45'
-                    status: 'sent',
-                    type: 'text'
-                }));
+                const formattedMessages: Message[] = messages.map((raw: RawServerMessage) =>
+                    transformServerMessage(raw, context)
+                );
 
                 if (page === 1) {
                     state.messages = formattedMessages;
@@ -486,7 +485,7 @@ const chatSlice = createSlice({
                 state.currentPage = page;
                 state.hasMoreMessages = messages.length > 0;
             })
-            .addCase(getPeopleMessages.rejected, (state, action) => {
+            .addCase(getPrivateChatMessages.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
@@ -553,7 +552,7 @@ const chatSlice = createSlice({
                 }
 
                 // Set active room to this user
-                state.activeRoomId = action.payload.user.username;
+                state.activeConversationId = action.payload.user.username;
 
                 // Load messages
                 state.messages = action.payload.messages;
@@ -579,22 +578,17 @@ const chatSlice = createSlice({
                     state.userList = action.payload.users;
                 }
 
-                // Update rooms
-                if (action.payload.rooms && action.payload.rooms.length > 0) {
-                    action.payload.rooms.forEach((newRoom: any) => {
-                        const exists = state.rooms.find(
-                            r => r.id === newRoom.id || r.name === newRoom.name
+                // Update conversations
+                if (action.payload.conversations && action.payload.conversations.length > 0) {
+                    action.payload.conversations.forEach((newConversation: any) => {
+                        const exists = state.conversations.find(
+                            c => c.id === newConversation.id || c.name === newConversation.name
                         );
                         if (!exists) {
-                            state.rooms.push(newRoom);
+                            state.conversations.push(newConversation);
                         }
                     });
                 }
-
-                console.log('Loaded:', {
-                    usersCount: state.userList.length,
-                    roomsCount: state.rooms.length
-                });
             })
             .addCase(getUserList.rejected, (state, action) => {
                 state.loading = false;
@@ -613,15 +607,15 @@ export const {
     markMessageSending,
     markMessageSent,
     markMessageFailed,
-    addRoom,
-    updateRoom,
-    removeRoom,
-    setRooms,
-    setActiveRoom,
+    addConversation,
+    updateConversation,
+    removeConversation,
+    setConversations,
+    setActiveConversation,
     incrementUnreadCount,
-    addActiveRoom,
-    removeActiveRoom,
-    setActiveRoomIds,
+    addSubscribedConversation,
+    removeSubscribedConversation,
+    setSubscribedConversationIds,
     setLoading,
     setError,
     clearError,
@@ -632,41 +626,38 @@ export const {
 
 // ===== SELECTORS =====
 export const selectMessages = (state: { chat: ChatState }) => state.chat.messages;
-export const selectRooms = (state: { chat: ChatState }) => state.chat.rooms;
-export const selectActiveRoomId = (state: { chat: ChatState }) => state.chat.activeRoomId;
-export const selectSubscribedChannels = (state: { chat: ChatState }) => state.chat.activeRoomIds;
+export const selectConversations = (state: { chat: ChatState }) => state.chat.conversations;
+export const selectActiveConversationId = (state: { chat: ChatState }) => state.chat.activeConversationId;
+export const selectSubscribedConversationIds = (state: { chat: ChatState }) => state.chat.subscribedConversationIds;
 export const selectChatLoading = (state: { chat: ChatState }) => state.chat.loading;
 export const selectChatError = (state: { chat: ChatState }) => state.chat.error;
 export const selectUserList = (state: { chat: ChatState }) => state.chat.userList;
 export const selectCurrentPage = (state: { chat: ChatState }) => state.chat.currentPage;
 export const selectHasMoreMessages = (state: { chat: ChatState }) => state.chat.hasMoreMessages;
-
 // New selector for checking if a message is sending
 export const selectIsMessageSending = (messageId: string) => (state: { chat: ChatState }) => {
     return state.chat.sendingMessages.includes(messageId);
 };
 
 // Advanced selectors
-export const selectActiveRoomMessages = (state: { chat: ChatState }) => {
-    const {messages, activeRoomId} = state.chat;
-    if (!activeRoomId) return [];
-    console.log("Active ID:", activeRoomId, "First Msg RoomId:", messages[0]?.roomId);
-
+export const selectActiveConversationMessages = (state: { chat: ChatState }) => {
+    const {messages, activeConversationId} = state.chat;
+    if (!activeConversationId) return [];
     return messages
-        .filter(m => m.roomId === activeRoomId || m.sender.id === activeRoomId)
+        .filter(m => m.receiver.id === activeConversationId || m.sender.id === activeConversationId)
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 };
 
-export const selectActiveRoom = (state: { chat: ChatState }) => {
-    const {rooms, activeRoomId, userList} = state.chat;
-    if (!activeRoomId) return null;
+export const selectActiveConversation = (state: { chat: ChatState }) => {
+    const {conversations, activeConversationId, userList} = state.chat;
+    if (!activeConversationId) return null;
 
     // Check if it's a room
-    const room = rooms.find(r => r.id === activeRoomId);
-    if (room) return room;
+    const conversation = conversations.find(c => c.id === activeConversationId);
+    if (conversation) return conversation;
 
     // Check if it's a user (private chat)
-    const user = userList.find(u => u.username === activeRoomId || u.id === activeRoomId);
+    const user = userList.find(u => u.username === activeConversationId || u.id === activeConversationId);
     if (user) {
         // Convert user to room format
         return {
@@ -684,11 +675,17 @@ export const selectActiveRoom = (state: { chat: ChatState }) => {
 };
 
 export const selectTotalUnreadCount = (state: { chat: ChatState }) => {
-    return state.chat.rooms.reduce((total, room) => total + room.unreadCount, 0);
+    return state.chat.conversations.reduce((total, conversation) => total + conversation.unreadCount, 0);
 };
 
-export const selectIsRoomActive = (roomId: string) => (state: { chat: ChatState }) => {
-    return state.chat.activeRoomIds.includes(roomId);
+export const selectIsConversationSubscribed = (conversationId: string) => (state: { chat: ChatState }) => {
+    return state.chat.subscribedConversationIds.includes(conversationId);
 };
+
+export const selectPrivateChats = (state: { chat: ChatState }) =>
+    state.chat.conversations.filter(c => c.type === 'private');
+
+export const selectGroupChats = (state: { chat: ChatState }) =>
+    state.chat.conversations.filter(c => c.type === 'group');
 
 export default chatSlice.reducer;

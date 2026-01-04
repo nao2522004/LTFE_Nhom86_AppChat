@@ -1,11 +1,11 @@
-import { WebSocketConnection } from './WebSocketConnection';
+import { SocketConnection } from './SocketConnection';
 
 /**
  * Base class cho tất cả WebSocket services
  * Provides common functionality như sendAndWaitForResponse
  */
 export abstract class BaseService {
-    constructor(protected connection: WebSocketConnection) {}
+    constructor(protected connection: SocketConnection) {}
 
     /**
      * Send message và đợi response với timeout

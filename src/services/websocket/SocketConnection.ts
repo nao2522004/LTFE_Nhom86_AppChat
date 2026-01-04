@@ -1,13 +1,30 @@
-
 /**
- * WebSocketConnection - Lớp hạ tầng điều khiển kết nối cấp thấp.
- * * @description
- * Chịu trách nhiệm duy trì "sự sống" của kết nối:
- * 1. **Auto-Reconnect**: Tự động kết nối lại với thuật toán Exponential Backoff + Jitter.
- * 2. **Event Dispatcher**: Phân phối dữ liệu từ Server tới các Service thông qua Pattern Pub/Sub.
- * 3. **Safety**: Quản lý trạng thái đóng/mở để tránh thất lạc dữ liệu khi gửi.
- * * @note Không gọi trực tiếp các hàm nghiệp vụ (Chat/Auth) ở đây.
- * Lớp này chỉ quan tâm đến việc giữ cho đường truyền luôn thông suốt.
+ * WebSocketConnection - Lớp hạ tầng quản lý kết nối WebSocket và phân phối responses.
+ *
+ * @description
+ * Chịu trách nhiệm duy trì kết nối và định tuyến responses từ server:
+ *
+ * 1. **Auto-Reconnect**:
+ *    - Tự động kết nối lại khi mất kết nối (trừ khi disconnect thủ công)
+ *    - Thuật toán: Exponential Backoff + Jitter
+ *    - Tối đa 5 lần thử, delay từ 1s → 30s
+ *
+ * 2. **Response Dispatcher (Event Bus)**:
+ *    - Nhận TẤT CẢ responses từ server qua `ws.onmessage`
+ *    - Phân loại theo `event` field trong response
+ *    - Trigger handlers tương ứng thông qua Pub/Sub pattern:
+ *      - Request-Response handlers: Đăng ký bởi `sendAndWaitForResponse()`
+ *      - Broadcast handlers: Đăng ký bởi `useWebSocketSetup`
+ *
+ * 3. **Connection Safety**:
+ *    - Quản lý readyState (CONNECTING, OPEN, CLOSING, CLOSED)
+ *    - Đợi kết nối OPEN trước khi gửi data (tránh mất message)
+ *    - Queue messages khi đang reconnecting (optional future enhancement)
+ *
+ * @note
+ * - Lớp này KHÔNG biết về business logic (Chat, Auth, User...)
+ * - Lớp này CHỈ quan tâm: Kết nối có sống không? Responses được gửi đúng chỗ chưa?
+ *
  */
 
 export interface ReconnectionConfig {
@@ -17,7 +34,7 @@ export interface ReconnectionConfig {
     backoffFactor: number;
 }
 
-export class WebSocketConnection {
+export class SocketConnection {
     private ws: WebSocket | null = null;
     private reconnectAttempts = 0;
     private reconnectTimeout: NodeJS.Timeout | null = null;
@@ -88,7 +105,12 @@ export class WebSocketConnection {
                 const message = JSON.parse(event.data);
                 console.log('%c[WebSocket] Message received',
                     'background: #34495e; color: white; padding: 2px 6px; border-radius: 3px;',
-                    message
+                    {
+                        event: message.event,
+                        status: message.status,
+                        fullMessage: message,
+                        timestamp: new Date().toISOString()
+                    }
                 );
 
                 if (message.event) {

@@ -3,7 +3,7 @@ import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import styles from './ChatWindow.module.css';
-import { Room, Message } from '../../../../shared/types/chat';
+import { Conversation, Message } from '../../../../shared/types/chat';
 import { User } from '../../../../shared/types/user';
 
 /**
@@ -13,7 +13,7 @@ import { User } from '../../../../shared/types/user';
  */
 interface ChatWindowViewProps {
     // Data
-    activeRoom: Room | null;
+    activeConversation: Conversation | null;
     messages: Message[];
     currentUser: User | null;
 
@@ -32,7 +32,7 @@ interface ChatWindowViewProps {
 }
 
 const ChatWindowView: React.FC<ChatWindowViewProps> = ({
-                                                           activeRoom,
+                                                           activeConversation,
                                                            messages,
                                                            currentUser,
                                                            loading,
@@ -44,7 +44,7 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                                                            chatBodyRef
                                                        }) => {
     // ========== RENDER: Empty State ==========
-    if (!activeRoom) {
+    if (!activeConversation) {
         return (
             <div className={styles.chatPanel}>
                 <div style={{
@@ -65,7 +65,7 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
         <div className={styles.chatPanel}>
             {/* Header */}
             <ChatHeader
-                name={activeRoom.name}
+                name={activeConversation.name}
                 avatar="https://i.pravatar.cc/150?img=3"
                 isOnline={true}
                 lastSeen="2:02pm"

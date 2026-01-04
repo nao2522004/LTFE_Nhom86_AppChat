@@ -47,7 +47,7 @@ export class UserService extends BaseService {
                 type: 'user'
             }));
 
-        const rooms = rawData
+        const conversations = rawData
             .filter((item: any) => item.type === 1)
             .map((item: any) => ({
                 id: item.name,
@@ -59,6 +59,6 @@ export class UserService extends BaseService {
                 updatedAt: item.actionTime
             }));
 
-        return { users, rooms };
+        return { users, conversations };
     }
 }
