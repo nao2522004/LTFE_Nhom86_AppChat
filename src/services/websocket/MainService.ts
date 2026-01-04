@@ -48,6 +48,7 @@ class WebSocketService {
     getState = () => connection.getState();
     on = (event: string, handler: (data: any) => void) => connection.on(event, handler);
     off = (event: string, handler?: (data: any) => void) => connection.off(event, handler);
+    waitForConnection = (timeout: number) => connection.waitForConnection(timeout);
 
     // Auth methods
     login = (data: any) => authService.login(data);
