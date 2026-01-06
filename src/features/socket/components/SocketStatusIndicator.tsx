@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import styles from './SocketIndicator.module.css';
+import styles from './ConnectionStatusIndicator.module.css';
 import {useAppSelector} from "../../../hooks/hooks";
-import {selectConnectionStatus, selectMaxReconnectAttempts, selectReconnectAttempts} from "../socketSlice";
+import {selectConnectionStatus, selectMaxReconnectAttempts, selectReconnectAttempts} from "../connectionSlice";
 
 const SocketStatusIndicator: React.FC = () => {
     const status = useAppSelector(selectConnectionStatus);

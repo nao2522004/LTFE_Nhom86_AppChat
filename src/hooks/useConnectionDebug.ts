@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppSelector } from './hooks';
-import { selectConnectionStatus } from '../features/socket/socketSlice';
+import { selectConnectionStatus } from '../features/socket/connectionSlice';
 
 export const useConnectionDebug = () => {
     const status = useAppSelector(selectConnectionStatus);

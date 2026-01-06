@@ -4,10 +4,10 @@ import {
     selectConnectionStatus,
     selectReconnectAttempts,
     selectMaxReconnectAttempts
-} from '../socketSlice';
-import styles from './SocketStatusBar.module.css'
+} from '../connectionSlice';
+import styles from './ConnectionStatusBar.module.css'
 
-const SocketStatusBar: React.FC = () => {
+const ConnectionStatusBar: React.FC = () => {
     const [expanded, setExpanded] = useState(false);
 
     const status = useAppSelector(selectConnectionStatus);
@@ -19,7 +19,7 @@ const SocketStatusBar: React.FC = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedStatus(status);
-            console.log('[SocketStatusBar] Status updated:', {
+            console.log('[ConnectionStatusBar] Status updated:', {
                 from: debouncedStatus,
                 to: status,
                 timestamp: new Date().toISOString()
@@ -99,4 +99,4 @@ const SocketStatusBar: React.FC = () => {
     );
 };
 
-export default SocketStatusBar;
+export default ConnectionStatusBar;

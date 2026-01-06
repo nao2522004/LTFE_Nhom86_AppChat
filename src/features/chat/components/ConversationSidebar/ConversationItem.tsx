@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./ConversationList.module.css";
+import styles from "./ConversationSidebar.module.css";
 
 interface ConversationProps {
     avatar: string;

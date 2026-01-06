@@ -11,7 +11,7 @@ import {
     getGroupChatMessages,
     getPrivateChatMessages
 } from '../chatSlice';
-import { selectIsConnected } from '../../socket/socketSlice';
+import { selectIsConnected } from '../../socket/connectionSlice';
 import ChatWindowView from '../components/ChatWindow/ChatWindowView';
 
 /**
@@ -19,7 +19,7 @@ import ChatWindowView from '../components/ChatWindow/ChatWindowView';
  * Chứa toàn bộ logic, Redux connections
  * Không chứa UI
  */
-const ChatWindowContainer: React.FC = () => {
+const ChatWindow: React.FC = () => {
     const dispatch = useAppDispatch();
     const chatBodyRef = useRef<HTMLDivElement>(null);
 
@@ -101,4 +101,4 @@ const ChatWindowContainer: React.FC = () => {
     );
 };
 
-export default ChatWindowContainer;
+export default ChatWindow;

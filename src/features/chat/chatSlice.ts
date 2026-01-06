@@ -467,13 +467,18 @@ const chatSlice = createSlice({
                 state.error = null;
             })
             .addCase(getPrivateChatMessages.fulfilled, (state, action) => {
+                console.log('GET_PEOPLE_CHAT_MES fulfilled:', action.payload);
+
                 state.loading = false;
                 const { messages, page, context } = action.payload;
 
-                const formattedMessages: Message[] = messages.map((raw: RawServerMessage) =>
-                    transformServerMessage(raw, context)
-                );
+                console.log('Raw messages from server:', messages);
+                console.log('Transform context:', context);
 
+                const formattedMessages: Message[] = messages.map((raw: RawServerMessage) => {
+                    const transformed = transformServerMessage(raw, context);
+                    return transformed;
+                });
                 if (page === 1) {
                     state.messages = formattedMessages;
                 } else {
@@ -481,7 +486,6 @@ const chatSlice = createSlice({
                     const newMessages = formattedMessages.filter((m: Message) => !existingIds.has(m.id));
                     state.messages = [...state.messages, ...newMessages];
                 }
-
                 state.currentPage = page;
                 state.hasMoreMessages = messages.length > 0;
             })
