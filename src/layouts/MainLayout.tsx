@@ -2,9 +2,9 @@ import React, {useEffect, useState} from "react";
 import { Outlet } from "react-router-dom";
 import styles from "./MainLayout.module.css";
 import Sidebar from "../components/Sidebar";
-import SocketStatusBar from "../features/socket/components/SocketStatusBar";
+import ConnectionStatusBar from "../features/socket/components/ConnectionStatusBar";
 import {useAppSelector} from "../hooks/hooks";
-import {selectConnectionStatus} from "../features/socket/socketSlice";
+import {selectConnectionStatus} from "../features/socket/connectionSlice";
 import SocketStatusIndicator from "../features/socket/components/SocketStatusIndicator";
 
 const MainLayout: React.FC = () => {
@@ -32,7 +32,7 @@ const MainLayout: React.FC = () => {
 
     return (
         <div className={styles.appContainer}>
-            {shouldShowStatusBar && <SocketStatusBar />}
+            {shouldShowStatusBar && <ConnectionStatusBar />}
 
             {/* Sideba */}
             <Sidebar />

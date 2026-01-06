@@ -28,7 +28,7 @@ export abstract class BaseService {
 
                 // Standardized error handling
                 if (response.status === 'success') {
-                    resolve(response.data as T);
+                    resolve(response as T);
                 } else {
                     const errorMessage = response.mes
                         || response.message

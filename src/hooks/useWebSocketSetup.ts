@@ -7,7 +7,7 @@ import {
     incrementReconnectAttempts,
     resetReconnectAttempts,
     setConnectionError,
-} from '../features/socket/socketSlice';
+} from '../features/socket/connectionSlice';
 import {addMessage, addConversation, getUserList, updateConversation, incrementUnreadCount } from '../features/chat/chatSlice';
 import websocketService from "../services/websocket/MainService";
 import {RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";

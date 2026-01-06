@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppSelector } from '../../hooks/hooks';
 import styles from './SocketIndicator.module.css';
-import { selectConnectionStatus } from '../../features/socket/socketSlice';
+import { selectConnectionStatus } from '../../features/socket/connectionSlice';
 
 const SocketIndicator: React.FC = () => {
     const connectionStatus = useAppSelector(selectConnectionStatus);

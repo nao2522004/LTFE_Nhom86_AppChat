@@ -1,33 +1,21 @@
 import React from 'react';
-import ChatHeader from './ChatHeader';
+import ChatWindowHeader from './ChatWindowHeader';
 import MessageBubble from './MessageBubble';
-import ChatInput from './ChatInput';
+import MessageInputBar from './MessageInputBar';
 import styles from './ChatWindow.module.css';
 import { Conversation, Message } from '../../../../shared/types/chat';
 import { User } from '../../../../shared/types/user';
 
-/**
- * VIEW (Presentational Component)
- * Chỉ nhận props và render UI
- * KHÔNG có logic, KHÔNG gọi Redux
- */
 interface ChatWindowViewProps {
-    // Data
     activeConversation: Conversation | null;
     messages: Message[];
     currentUser: User | null;
-
-    // States
     loading: boolean;
     error: string | null;
     isConnected: boolean;
     hasMoreMessages: boolean;
-
-    // Handlers
     onSendMessage: (text: string) => void;
     onLoadMore: () => void;
-
-    // Refs
     chatBodyRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -43,114 +31,115 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                                                            onLoadMore,
                                                            chatBodyRef
                                                        }) => {
-    // ========== RENDER: Empty State ==========
+    // Empty State - No conversation selected
     if (!activeConversation) {
         return (
             <div className={styles.chatPanel}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: '#999'
-                }}>
-                    Select a conversation to start chatting
+                <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}>
+                        <i className="fas fa-comments"></i>
+                    </div>
+                    <h3 className={styles.emptyTitle}>Welcome to Chat</h3>
+                    <p className={styles.emptyText}>
+                        Select a conversation from the left panel to start messaging
+                    </p>
+                    <div className={styles.emptyHint}>
+                        <i className="fas fa-arrow-left"></i>
+                        <span>Choose a conversation or start a new one</span>
+                    </div>
                 </div>
             </div>
         );
     }
 
-    // ========== RENDER: Main Chat ==========
     return (
         <div className={styles.chatPanel}>
             {/* Header */}
-            <ChatHeader
+            <ChatWindowHeader
                 name={activeConversation.name}
                 avatar="https://i.pravatar.cc/150?img=3"
                 isOnline={true}
                 lastSeen="2:02pm"
             />
 
-            {/* Body */}
+            {/* Body - Messages Area */}
             <div className={styles.chatBody} ref={chatBodyRef}>
                 {/* Connection Warning */}
                 {!isConnected && (
-                    <div style={{
-                        padding: '10px',
-                        background: '#fff3cd',
-                        borderRadius: '8px',
-                        marginBottom: '10px',
-                        textAlign: 'center',
-                        color: '#856404'
-                    }}>
-                        Disconnected. Trying to reconnect...
+                    <div className={styles.connectionWarning}>
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>Disconnected. Trying to reconnect...</span>
                     </div>
                 )}
 
-                {/* Error */}
+                {/* Error Message */}
                 {error && (
-                    <div style={{
-                        padding: '10px',
-                        background: '#f8d7da',
-                        borderRadius: '8px',
-                        marginBottom: '10px',
-                        textAlign: 'center',
-                        color: '#721c24'
-                    }}>
-                        {error}
+                    <div className={styles.errorMessage}>
+                        <i className="fas fa-times-circle"></i>
+                        <span>{error}</span>
                     </div>
                 )}
 
                 {/* Load More Button */}
                 {hasMoreMessages && messages.length > 0 && (
-                    <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                    <div className={styles.loadMoreContainer}>
                         <button
                             onClick={onLoadMore}
                             disabled={loading}
-                            style={{
-                                padding: '8px 16px',
-                                background: '#5d8e85',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '20px',
-                                cursor: 'pointer',
-                                fontSize: '12px'
-                            }}
+                            className={`${styles.loadMoreBtn} ${loading ? styles.disabled : ''}`}
                         >
-                            {loading ? 'Loading...' : 'Load more messages'}
+                            {loading ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    <span>Loading...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-chevron-up"></i>
+                                    <span>Load older messages</span>
+                                </>
+                            )}
                         </button>
                     </div>
                 )}
 
-                {/* Messages */}
-                {messages.length === 0 && !loading && (
-                    <div style={{ textAlign: 'center', color: '#999', marginTop: '20px' }}>
-                        No messages yet. Start the conversation!
+                {/* Messages List */}
+                {messages.length === 0 && !loading ? (
+                    <div className={styles.noMessages}>
+                        <div className={styles.noMessagesIcon}>
+                            <i className="fas fa-inbox"></i>
+                        </div>
+                        <p className={styles.noMessagesTitle}>No messages yet</p>
+                        <p className={styles.noMessagesText}>
+                            Start the conversation by sending the first message!
+                        </p>
                     </div>
+                ) : (
+                    messages.map((msg) => (
+                        <MessageBubble
+                            key={msg.id}
+                            text={msg.content}
+                            time={new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                            isSent={msg.sender.username === currentUser?.username}
+                            status={msg.status}
+                        />
+                    ))
                 )}
 
-                {messages.map((msg) => (
-                    <MessageBubble
-                        key={msg.id}
-                        text={msg.content}
-                        time={new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        isSent={msg.sender.username === currentUser?.username}
-                        status={msg.status}
-                    />
-                ))}
-
+                {/* Initial Loading */}
                 {loading && messages.length === 0 && (
-                    <div style={{ textAlign: 'center', color: '#999' }}>
-                        Loading messages...
+                    <div className={styles.loadingMessages}>
+                        <i className="fas fa-spinner fa-spin"></i>
+                        <span>Loading messages...</span>
                     </div>
                 )}
             </div>
 
-            {/* Footer */}
-            <ChatInput
-                onSendMessage={onSendMessage}
-                disabled={!isConnected}
-            />
+            {/* Footer - Input Area */}
+            <MessageInputBar onSendMessage={onSendMessage} disabled={!isConnected} />
         </div>
     );
 };

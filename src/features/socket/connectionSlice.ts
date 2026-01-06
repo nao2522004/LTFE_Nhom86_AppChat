@@ -24,7 +24,7 @@ const initialState: ConnectionState = {
 };
 
 // ===== SLICE =====
-const socketSlice = createSlice({
+const connectionSlice = createSlice({
     name: 'connection',
     initialState,
     reducers: {
@@ -102,7 +102,7 @@ export const {
     setConnectionError,
     clearConnectionError,
     resetConnection
-} = socketSlice.actions;
+} = connectionSlice.actions;
 
 // ===== SELECTORS =====
 export const selectConnectionStatus = (state: { connection: ConnectionState }) =>
@@ -141,4 +141,4 @@ export const selectConnectionInfo = (state: { connection: ConnectionState }) => 
     isConnected: state.connection.status === 'connected'
 });
 
-export default socketSlice.reducer;
+export default connectionSlice.reducer;

@@ -9,7 +9,7 @@ interface MessageProps {
     status?: MessageStatus;
 }
 
-const MessageBubble: React.FC<MessageProps> = ({ text, time, isSent, status }) => {
+const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => {
     return (
         <div className={`${styles.message} ${isSent ? styles.sent : styles.received}`}>
             <div className={styles.msgBubble}>

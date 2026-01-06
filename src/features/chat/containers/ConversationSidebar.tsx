@@ -12,14 +12,14 @@ import {
     joinGroupChat,
     checkUserExist
 } from '../chatSlice';
-import ConversationListView from '../components/ConversationList/ConversationListView';
-import CreateConversationModal from '../components/ConversationList/CreateConversationModal';
+import ConversationSidebarView from '../components/ConversationSidebar/ConversationSidebarView';
+import NewConversationModal from '../components/ConversationSidebar/NewConversationModal';
 
 /**
  * CONTROLLER
- * Logic cho ConversationList
+ * Logic cho ConversationSidebar
  */
-const ConversationListContainer: React.FC = () => {
+const ConversationSidebar: React.FC = () => {
     const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -139,7 +139,7 @@ const ConversationListContainer: React.FC = () => {
     // ========== RENDER VIEW ==========
     return (
         <>
-            <ConversationListView
+            <ConversationSidebarView
                 // Data
                 conversations={filteredConversations}
                 users={filteredUsers}
@@ -157,7 +157,7 @@ const ConversationListContainer: React.FC = () => {
 
             {/* Modal phải nằm trong cùng một khối return nhưng dưới ListView */}
             {showModal && (
-                <CreateConversationModal
+                <NewConversationModal
                     onClose={() => setShowModal(false)}
                     onCreateGroupChat={handleCreateGroupChat}
                     onJoinGroupChat={handleJoinGroupChat}
@@ -169,4 +169,4 @@ const ConversationListContainer: React.FC = () => {
     );
 };
 
-export default ConversationListContainer;
+export default ConversationSidebar;

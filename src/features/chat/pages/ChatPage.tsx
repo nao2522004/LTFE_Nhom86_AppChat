@@ -1,5 +1,5 @@
-import ConversationListContainer from "../containers/ConversationListContainer";
-import ChatWindowContainer from "../containers/ChatWindowContainer";
+import ConversationSidebar from "../containers/ConversationSidebar";
+import ChatWindow from "../containers/ChatWindow";
 
 /**
  * PAGE
@@ -8,8 +8,8 @@ import ChatWindowContainer from "../containers/ChatWindowContainer";
 const ChatPage: React.FC = () => {
     return (
         <>
-            <ConversationListContainer />
-            <ChatWindowContainer />
+            <ConversationSidebar />
+            <ChatWindow />
         </>
     );
 };

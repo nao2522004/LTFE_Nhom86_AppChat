@@ -8,7 +8,7 @@ interface CreateConversationModalProps {
     userList: any[];
 }
 
-const CreateConversationModal: React.FC<CreateConversationModalProps> = ({
+const NewConversationModal: React.FC<CreateConversationModalProps> = ({
                                                                              onClose,
                                                                              onCreateGroupChat,
                                                                              onJoinGroupChat,
@@ -427,4 +427,4 @@ const styles: { [key: string]: React.CSSProperties } = {
     }
 };
 
-export default CreateConversationModal;
+export default NewConversationModal;

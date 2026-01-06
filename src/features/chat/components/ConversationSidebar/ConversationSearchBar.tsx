@@ -1,12 +1,12 @@
 import React from "react";
-import styles from "./ConversationList.module.css";
+import styles from "./ConversationSidebar.module.css";
 
 interface SearchBoxProps {
     value: string;
     onChange: (value: string) => void;
 }
 
-const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => {
+const ConversationSearchBar: React.FC<SearchBoxProps> = ({ value, onChange }) => {
     return (
         <div className={styles.searchBox}>
             <i className="fas fa-search"></i>
@@ -20,4 +20,4 @@ const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => {
     );
 };
 
-export default SearchBox;
+export default ConversationSearchBar;

@@ -1,40 +1,32 @@
 import {BaseService} from "./BaseService";
 
-interface UserListResponse {
-    users: any[];
-}
-
-export interface CheckUserOnlineData {
-    user: string;
-}
-
-interface UserListResponse {
-    users: any[];
-}
-
-
 export class UserService extends BaseService {
     async checkUserExist(username: string): Promise<any> {
-        return this.sendAndWaitForResponse('CHECK_USER_EXIST', {
+        const response = await this.sendAndWaitForResponse('CHECK_USER_EXIST', {
             user: username
         });
+        return response.data;
     }
 
     async checkUserOnline(username: string): Promise<any> {
-        return this.sendAndWaitForResponse('CHECK_USER_ONLINE', {
+        const response = await this.sendAndWaitForResponse('CHECK_USER_ONLINE', {
             user: username
         });
+        return response.data;
     }
 
     async getUserList(): Promise<any> {
-        const response = await this.sendAndWaitForResponse<UserListResponse>(
+        const response = await this.sendAndWaitForResponse<any>(
             'GET_USER_LIST',
             {}
         );
 
-        const rawData = response.users || response || [];
+        const rawData = response.data || [];
+        const dataArray = Array.isArray(rawData)
+            ? rawData
+            : Object.values(rawData).filter(item => typeof item === 'object');
 
-        const users = rawData
+        const users = dataArray
             .filter((item: any) => item.type === 0)
             .map((item: any) => ({
                 id: item.name,
@@ -47,7 +39,7 @@ export class UserService extends BaseService {
                 type: 'user'
             }));
 
-        const conversations = rawData
+        const conversations = dataArray
             .filter((item: any) => item.type === 1)
             .map((item: any) => ({
                 id: item.name,

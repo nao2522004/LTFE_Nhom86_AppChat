@@ -33,17 +33,35 @@ export class ChatService extends BaseService {
     }
 
     async getGroupChatMessages(data: GetMessagesData): Promise<GetMessagesResponse> {
-        return this.sendAndWaitForResponse<GetMessagesResponse>(
+        const response = await this.sendAndWaitForResponse<any>(
             'GET_ROOM_CHAT_MES',
             data
         );
+
+        const rawData = response.data || [];
+        const messages = Array.isArray(rawData)
+            ? rawData
+            : Object.values(rawData).filter(item => typeof item === 'object');
+
+        console.log(`[GET_ROOM_CHAT_MES] Parsed ${messages.length} messages`);
+
+        return { messages };
     }
 
     async getPrivateChatMessages(data: GetMessagesData): Promise<any> {
-        return this.sendAndWaitForResponse<GetMessagesResponse>(
+        const response = await this.sendAndWaitForResponse<any>(
             'GET_PEOPLE_CHAT_MES',
             data
         );
+
+        const rawData = response.data || [];
+        const messages = Array.isArray(rawData)
+            ? rawData
+            : Object.values(rawData).filter(item => typeof item === 'object');
+
+        console.log(`[GET_PEOPLE_CHAT_MES] Parsed ${messages.length} messages`);
+
+        return { messages };
     }
 
     async createGroupChat(data: CreateGroupChatData): Promise<any> {

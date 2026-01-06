@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppSelector } from '../../hooks/hooks';
 import websocketService from "../../services/websocket/MainService";
-import { selectIsConnected } from '../../features/socket/socketSlice';
+import { selectIsConnected } from '../../features/socket/connectionSlice';
 
 interface ConnectionLog {
     timestamp: string;

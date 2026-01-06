@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import userReducer from '../features/user/userSlice';
 import authReducer from '../features/auth/authSlice';
 import chatReducer from '../features/chat/chatSlice';
-import connectionReducer from '../features/socket/socketSlice';
+import connectionReducer from '../features/socket/connectionSlice';
 
 // ===== CONFIGURE STORE =====
 export const store = configureStore({
