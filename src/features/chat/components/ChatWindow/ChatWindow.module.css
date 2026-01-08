@@ -467,3 +467,23 @@
         font-size: 1rem;
     }
 }
+
+.headerAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.headerAvatarIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #5d8e85;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}

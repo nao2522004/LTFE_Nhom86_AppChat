@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, {useEffect, useRef, useCallback, useMemo} from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import {
     selectActiveConversationMessages,
@@ -32,6 +32,49 @@ const ChatWindow: React.FC = () => {
     const hasMoreMessages = useAppSelector(selectHasMoreMessages);
     const isConnected = useAppSelector(selectIsConnected);
     const currentUser = useAppSelector((state) => state.auth.user);
+
+    const currentUsername = useMemo(() => {
+        if (!activeConversation || messages.length === 0) {
+            return null;
+        }
+        const activeId = activeConversation.id;
+        // Tìm message được GỬI ĐẾN activeConversation
+        // → Sender của message đó là current user
+        const sentMessage = messages.find(m =>
+            m.receiver.id === activeId || m.receiver.name === activeId
+        );
+
+        if (sentMessage) {
+            console.log('Current user identified from SENT message:', sentMessage.sender.username);
+            return sentMessage.sender.username;
+        }
+        // Fallback: Tìm message NHẬN TỪ activeConversation
+        // → Receiver là current user
+        const receivedMessage = messages.find(m =>
+            m.sender.id === activeId || m.sender.username === activeId
+        );
+
+        if (receivedMessage) {
+            console.log('Current user identified from RECEIVED message:', receivedMessage.receiver.name);
+            return receivedMessage.receiver.name;
+        }
+
+        console.warn('Cannot identify current user');
+        return null;
+    }, [messages, activeConversation]);
+
+    // Debug log
+    useEffect(() => {
+        console.log('ChatWindow Debug:', {
+            currentUsername,
+            activeConversationId: activeConversation?.id,
+            messagesCount: messages.length,
+            firstMessage: messages[0] ? {
+                sender: messages[0].sender.username,
+                receiver: messages[0].receiver.name
+            } : null
+        });
+    }, [currentUsername, activeConversation, messages]);
 
     // ========== EFFECTS ==========
     // Auto scroll khi có message mới
@@ -83,7 +126,7 @@ const ChatWindow: React.FC = () => {
             // Data
             activeConversation={activeConversation}
             messages={messages}
-            currentUser={currentUser}
+            currentUsername={currentUsername}
 
             // States
             loading={loading}

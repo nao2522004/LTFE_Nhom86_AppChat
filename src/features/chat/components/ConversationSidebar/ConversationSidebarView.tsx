@@ -150,7 +150,7 @@ const ConversationSidebarView: React.FC<ConversationSidebarViewProps> = ({
                                     >
                                         <div className={styles.avatarContainer}>
                                             <img
-                                                src={user.avatar || `https://i.pravatar.cc/150?u=${user.username}`}
+                                                src={user.avatar || `https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y?u=${user.username}`}
                                                 alt={user.username}
                                                 className={styles.avatar}
                                             />

@@ -42,9 +42,6 @@ export class ChatService extends BaseService {
         const messages = Array.isArray(rawData)
             ? rawData
             : Object.values(rawData).filter(item => typeof item === 'object');
-
-        console.log(`[GET_ROOM_CHAT_MES] Parsed ${messages.length} messages`);
-
         return { messages };
     }
 
@@ -58,9 +55,6 @@ export class ChatService extends BaseService {
         const messages = Array.isArray(rawData)
             ? rawData
             : Object.values(rawData).filter(item => typeof item === 'object');
-
-        console.log(`[GET_PEOPLE_CHAT_MES] Parsed ${messages.length} messages`);
-
         return { messages };
     }
 

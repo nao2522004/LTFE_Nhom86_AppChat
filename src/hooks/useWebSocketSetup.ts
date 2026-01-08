@@ -1,5 +1,5 @@
 import {useEffect, useRef} from 'react';
-import { useAppDispatch, useAppSelector } from './hooks';
+import {useAppDispatch, useAppSelector} from './hooks';
 import {
     setConnected,
     setDisconnected,
@@ -8,7 +8,13 @@ import {
     resetReconnectAttempts,
     setConnectionError,
 } from '../features/socket/connectionSlice';
-import {addMessage, addConversation, getUserList, updateConversation, incrementUnreadCount } from '../features/chat/chatSlice';
+import {
+    addMessage,
+    addConversation,
+    getUserList,
+    updateConversation,
+    incrementUnreadCount
+} from '../features/chat/chatSlice';
 import websocketService from "../services/websocket/MainService";
 import {RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
 
@@ -41,13 +47,14 @@ import {RawServerMessage, TransformContext, transformServerMessage} from "../sha
 
 export const useWebSocketSetup = () => {
     const dispatch = useAppDispatch();
-    const { isAuthenticated } = useAppSelector((state) => state.auth);
+    const {isAuthenticated} = useAppSelector((state) => state.auth);
 
     const activeConversationId = useAppSelector((state) => state.chat.activeConversationId);
 
     // Track if user list has been loaded
     const userListLoadedRef = useRef(false);
     const isSetupRef = useRef(false);
+    const handlersRegisteredRef = useRef(false);
 
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -57,7 +64,6 @@ export const useWebSocketSetup = () => {
         }
 
         isSetupRef.current = true;
-        console.log('[useWebSocketSetup] Setting up WebSocket listeners...');
 
         const handleOpen = () => {
 
@@ -66,9 +72,10 @@ export const useWebSocketSetup = () => {
 
             // Load user list ONLY ONCE when connected
             if (!userListLoadedRef.current) {
-                console.log('Loading user list on first socket...');
                 dispatch(getUserList());
                 userListLoadedRef.current = true;
+            } else {
+                console.log('[useWebSocketSetup] ⏭️ User list already loaded, skipping');
             }
         };
 
@@ -182,23 +189,26 @@ export const useWebSocketSetup = () => {
         };
 
         // ===== REGISTER LISTENERS =====
+        if (!handlersRegisteredRef.current) {
+            // Connection events
+            websocketService.on('open', handleOpen);
+            websocketService.on('close', handleClose);
+            websocketService.on('error', handleError);
+            websocketService.on('reconnecting', handleReconnecting);
+            websocketService.on('reconnection_failed', handleReconnectionFailed);
 
-        // Connection events
-        websocketService.on('open', handleOpen);
-        websocketService.on('close', handleClose);
-        websocketService.on('error', handleError);
-        websocketService.on('reconnecting', handleReconnecting);
-        websocketService.on('reconnection_failed', handleReconnectionFailed);
+            // Chat events
+            websocketService.on('SEND_CHAT', handleSendChat);
+            websocketService.on('JOIN_ROOM', handleJoinRoom);
+            websocketService.on('LEAVE_ROOM', handleLeaveRoom);
+            websocketService.on('CREATE_ROOM', handleCreateRoom);
 
-        // Chat events
-        websocketService.on('SEND_CHAT', handleSendChat);
-        websocketService.on('JOIN_ROOM', handleJoinRoom);
-        websocketService.on('LEAVE_ROOM', handleLeaveRoom);
-        websocketService.on('CREATE_ROOM', handleCreateRoom);
+            // User events
+            websocketService.on('USER_ONLINE', handleUserOnline);
+            websocketService.on('USER_OFFLINE', handleUserOffline);
 
-        // User events
-        websocketService.on('USER_ONLINE', handleUserOnline);
-        websocketService.on('USER_OFFLINE', handleUserOffline);
+            handlersRegisteredRef.current = true;
+        }
 
         if (websocketService.isConnected()) {
             handleOpen();
