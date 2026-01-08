@@ -4,12 +4,11 @@ import MessageBubble from './MessageBubble';
 import MessageInputBar from './MessageInputBar';
 import styles from './ChatWindow.module.css';
 import { Conversation, Message } from '../../../../shared/types/chat';
-import { User } from '../../../../shared/types/user';
 
 interface ChatWindowViewProps {
     activeConversation: Conversation | null;
     messages: Message[];
-    currentUser: User | null;
+    currentUsername: string | null;
     loading: boolean;
     error: string | null;
     isConnected: boolean;
@@ -22,7 +21,7 @@ interface ChatWindowViewProps {
 const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                                                            activeConversation,
                                                            messages,
-                                                           currentUser,
+                                                           currentUsername,
                                                            loading,
                                                            error,
                                                            isConnected,
@@ -57,7 +56,7 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
             {/* Header */}
             <ChatWindowHeader
                 name={activeConversation.name}
-                avatar="https://i.pravatar.cc/150?img=3"
+                avatar=""
                 isOnline={true}
                 lastSeen="2:02pm"
             />
@@ -115,18 +114,30 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                         </p>
                     </div>
                 ) : (
-                    messages.map((msg) => (
-                        <MessageBubble
-                            key={msg.id}
-                            text={msg.content}
-                            time={new Date(msg.timestamp).toLocaleTimeString([], {
+                    messages.map((msg) => {
+                        const isSent = msg.sender.username === currentUsername;
+                        const adjustedTime = (() => {
+                            // Parse timestamp
+                            const date = new Date(msg.timestamp);
+
+                            // Format với Vietnam timezone
+                            return date.toLocaleTimeString('vi-VN', {
                                 hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                            isSent={msg.sender.username === currentUser?.username}
-                            status={msg.status}
-                        />
-                    ))
+                                minute: '2-digit',
+                                hour12: false,
+                                timeZone: 'Asia/Ho_Chi_Minh'  // ← Force VN timezone
+                            });
+                        })();
+                        return (
+                            <MessageBubble
+                                key={msg.id}
+                                text={msg.content}
+                                time={adjustedTime}
+                                isSent={isSent}
+                                status={msg.status}
+                            />
+                        );
+                    })
                 )}
 
                 {/* Initial Loading */}

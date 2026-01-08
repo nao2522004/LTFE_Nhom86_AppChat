@@ -218,7 +218,6 @@ export const getUserList = createAsyncThunk(
     async (_, {rejectWithValue}) => {
         try {
             const response = await websocketService.getUserList();
-            console.log('getUserList thunk response:', response);
             return {
                 users: response.users || [],
                 conversations: response.conversations || []
@@ -471,10 +470,6 @@ const chatSlice = createSlice({
 
                 state.loading = false;
                 const { messages, page, context } = action.payload;
-
-                console.log('Raw messages from server:', messages);
-                console.log('Transform context:', context);
-
                 const formattedMessages: Message[] = messages.map((raw: RawServerMessage) => {
                     const transformed = transformServerMessage(raw, context);
                     return transformed;

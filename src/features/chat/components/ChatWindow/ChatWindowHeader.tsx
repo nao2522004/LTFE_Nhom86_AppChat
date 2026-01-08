@@ -17,7 +17,11 @@ const ChatWindowHeader: React.FC<ChatWindowHeaderProps> = ({
     return (
         <div className={styles.chatHeader}>
             <div className={styles.headerUser}>
-                <img src={avatar} alt={name} className={styles.headerAvatar} />
+                {avatar ? (<img src={avatar} alt={name} className={styles.headerAvatar}/>) : (
+                    <div className={styles.headerAvatarIcon}>
+                        <i className="fas fa-user"></i>
+                    </div>
+                )}
                 <div className={styles.userStatus}>
                     <h3>{name}</h3>
                     <span className={styles.statusText}>
