@@ -10,7 +10,8 @@ import {
     selectChatLoading,
     createGroupChat,
     joinGroupChat,
-    checkUserExist
+    checkUserExist,
+    addUser
 } from '../chatSlice';
 import ConversationSidebarView from '../components/ConversationSidebar/ConversationSidebarView';
 import NewConversationModal from '../components/ConversationSidebar/NewConversationModal';
@@ -29,7 +30,6 @@ const ConversationSidebar: React.FC = () => {
     const userList = useAppSelector(selectUserList);
     const loading = useAppSelector(selectChatLoading);
 
-    // ========== EVENT HANDLERS ==========
     const handleSelectConversation = useCallback(async (
         id: string,
         type: 'room' | 'people',
@@ -77,42 +77,49 @@ const ConversationSidebar: React.FC = () => {
 
     const handleStartChat = async (username: string) => {
         try {
-            console.log('Starting chat with:', username);
+            // Check if user exists in current userList first
+            const existingUser = userList.find(
+                (u: any) => u.username === username || u.id === username
+            );
+
+            if (existingUser) {
+                dispatch(setActiveConversation(username));
+                await dispatch(getPrivateChatMessages({name: username, page: 1}));
+                return;
+            }
 
             const result = await dispatch(checkUserExist(username));
 
-            console.log('Full result:', result);
-
             if (checkUserExist.fulfilled.match(result)) {
                 const payload = result.payload;
-
-                console.log('Fulfilled payload:', payload);
-
-                // FIX: Check payload.status instead of payload.exists
                 let exists = false;
-
                 if (typeof payload === 'object' && payload !== null) {
-                    // Ưu tiên check `status` field (theo response từ server)
                     if ('status' in payload) {
                         exists = payload.status === true || payload.status === 'success';
                     }
-                    // Fallback: check `exists` field
                     else if ('exists' in payload) {
                         exists = payload.exists === true;
                     }
-                    // Fallback: check `user` field
                     else if ('user' in payload) {
                         exists = true;
                     }
                 }
-
-                console.log('Final exists value:', exists);
 
                 if (!exists) {
                     throw new Error('User không tồn tại');
                 }
 
                 // Nếu user tồn tại, tiếp tục load messages
+                dispatch(addUser({
+                    id: username,
+                    username: username,
+                    displayName: username,
+                    name: username,
+                    avatar: null,
+                    isOnline: true,
+                    lastSeen: new Date().toISOString(),
+                    type: 'user'
+                }));
                 dispatch(setActiveConversation(username));
                 await dispatch(getPrivateChatMessages({name: username, page: 1}));
 
@@ -126,7 +133,6 @@ const ConversationSidebar: React.FC = () => {
         }
     };
 
-    // ========== FILTER DATA ==========
     const filteredConversations = conversations.filter(conversation =>
         conversation.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -136,7 +142,6 @@ const ConversationSidebar: React.FC = () => {
         user.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // ========== RENDER VIEW ==========
     return (
         <>
             <ConversationSidebarView

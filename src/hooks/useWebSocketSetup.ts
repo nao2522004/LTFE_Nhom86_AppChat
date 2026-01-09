@@ -13,7 +13,7 @@ import {
     addConversation,
     getUserList,
     updateConversation,
-    incrementUnreadCount
+    incrementUnreadCount, addUser
 } from '../features/chat/chatSlice';
 import websocketService from "../services/websocket/MainService";
 import {RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
@@ -55,6 +55,7 @@ export const useWebSocketSetup = () => {
     const userListLoadedRef = useRef(false);
     const isSetupRef = useRef(false);
     const handlersRegisteredRef = useRef(false);
+    const userListLoadingRef = useRef(false);
 
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -71,11 +72,15 @@ export const useWebSocketSetup = () => {
             dispatch(resetReconnectAttempts());
 
             // Load user list ONLY ONCE when connected
-            if (!userListLoadedRef.current) {
-                dispatch(getUserList());
+            if (!userListLoadedRef.current && !userListLoadingRef.current) {
                 userListLoadedRef.current = true;
+                dispatch(getUserList())
+                    .finally(() => {
+                        userListLoadedRef.current = true;
+                        userListLoadingRef.current = false;
+                    });
             } else {
-                console.log('[useWebSocketSetup] ⏭️ User list already loaded, skipping');
+                console.log('[useWebSocketSetup] User list already loaded/loading, skipping');
             }
         };
 
@@ -109,6 +114,7 @@ export const useWebSocketSetup = () => {
 
         // Nhận tin nhắn mới từ server
         const handleSendChat = (message: any) => {
+            console.log('SEND_CHAT broadcast received:', message);
             if (message.status === 'success' && message.data) {
                 const state = (dispatch as any).getState();
                 const context: TransformContext = {
@@ -124,7 +130,7 @@ export const useWebSocketSetup = () => {
                 const rawMessage: RawServerMessage = {
                     id: message.data.id || Date.now(),
                     mes: message.data.mes || message.data.content,
-                    name: message.data.from || message.data.name,
+                    name: message.data.from || message.data.sender || '',
                     to: message.data.to,
                     createAt: message.data.timestamp
                         ? new Date(message.data.timestamp).toISOString()
@@ -135,7 +141,35 @@ export const useWebSocketSetup = () => {
                 const transformedMessage = transformServerMessage(rawMessage, context);
 
                 dispatch(addMessage(transformedMessage));
+
+                const sender = transformedMessage.sender.username;
+                const receiver = transformedMessage.receiver.id;
+
                 const conversationId = message.data.to;
+
+                dispatch(updateConversation({
+                    id: sender,
+                    updates: {
+                        lastMessage: transformedMessage,
+                        updatedAt: transformedMessage.timestamp
+                    }
+                }));
+
+                // Update conversation với receiver
+                dispatch(updateConversation({
+                    id: receiver,
+                    updates: {
+                        lastMessage: transformedMessage,
+                        updatedAt: transformedMessage.timestamp
+                    }
+                }));
+
+                if (sender !== activeConversationId) {
+                    dispatch(incrementUnreadCount(sender));
+                }
+                if (receiver !== activeConversationId) {
+                    dispatch(incrementUnreadCount(receiver));
+                }
 
                 dispatch(updateConversation({
                     id: conversationId,
@@ -148,6 +182,27 @@ export const useWebSocketSetup = () => {
                 if (conversationId !== activeConversationId) {
                     dispatch(incrementUnreadCount(conversationId));
                 }
+
+                dispatch(updateConversation({
+                    id: conversationId,
+                    updates: {
+                        lastMessage: transformedMessage,
+                        updatedAt: transformedMessage.timestamp
+                    }
+                }));
+
+                if (conversationId !== activeConversationId) {
+                    dispatch(incrementUnreadCount(conversationId));
+                }
+
+                dispatch(addUser({
+                    id: transformedMessage.sender.username,
+                    username: transformedMessage.sender.username,
+                    displayName: transformedMessage.sender.displayName || transformedMessage.sender.username,
+                    avatar: transformedMessage.sender.avatar,
+                    isOnline: true,
+                    type: 'user'
+                }));
 
                 console.log('Message processed and room updated:', {
                     messageId: transformedMessage.id,
@@ -232,9 +287,6 @@ export const useWebSocketSetup = () => {
             websocketService.off('USER_OFFLINE', handleUserOffline);
 
             websocketService.off('message');
-
-            userListLoadedRef.current = false;
-            isSetupRef.current = false;
         };
     }, [dispatch, isAuthenticated, activeConversationId]);
 };

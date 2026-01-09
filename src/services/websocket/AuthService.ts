@@ -30,8 +30,6 @@ export class AuthService extends BaseService{
     async login(credentials: LoginData): Promise<any> {
         const response = await this.sendAndWaitForResponse<LoginResponse>("LOGIN", credentials);
 
-        console.log('[AuthService.login] Server response:', response);
-
         if (response.RE_LOGIN_CODE) {
             try {
                 const encryptedToken = await encryptToken(response.RE_LOGIN_CODE);

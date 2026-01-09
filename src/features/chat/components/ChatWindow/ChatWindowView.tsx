@@ -11,10 +11,12 @@ interface ChatWindowViewProps {
     currentUsername: string | null;
     loading: boolean;
     error: string | null;
+    sendError: string | null;
     isConnected: boolean;
     hasMoreMessages: boolean;
     onSendMessage: (text: string) => void;
     onLoadMore: () => void;
+    onClearSendError: () => void;
     chatBodyRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -24,10 +26,12 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                                                            currentUsername,
                                                            loading,
                                                            error,
+                                                           sendError,
                                                            isConnected,
                                                            hasMoreMessages,
                                                            onSendMessage,
                                                            onLoadMore,
+                                                           onClearSendError,
                                                            chatBodyRef
                                                        }) => {
     // Empty State - No conversation selected
@@ -60,6 +64,20 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                 isOnline={true}
                 lastSeen="2:02pm"
             />
+
+            {sendError && (
+                <div className={styles.sendErrorBanner}>
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <span>{sendError}</span>
+                    <button
+                        onClick={onClearSendError}
+                        className={styles.errorCloseBtn}
+                        title="Đóng"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
             {/* Body - Messages Area */}
             <div className={styles.chatBody} ref={chatBodyRef}>
@@ -150,7 +168,7 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
             </div>
 
             {/* Footer - Input Area */}
-            <MessageInputBar onSendMessage={onSendMessage} disabled={!isConnected} />
+            <MessageInputBar onSendMessage={onSendMessage} disabled={!isConnected  || !!sendError} />
         </div>
     );
 };

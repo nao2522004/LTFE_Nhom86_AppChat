@@ -487,3 +487,58 @@
     font-size: 18px;
     flex-shrink: 0;
 }
+
+.sendErrorBanner {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe5b4 100%);
+    border-left: 4px solid #ffc107;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #856404;
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideDown 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.sendErrorBanner i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.sendErrorBanner span {
+    flex: 1;
+}
+
+.errorCloseBtn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #856404;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.errorCloseBtn:hover {
+    opacity: 1;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

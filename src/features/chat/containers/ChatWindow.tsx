@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useCallback, useMemo} from 'react';
-import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
+import React, {useEffect, useRef, useCallback, useMemo, useState} from 'react';
+import {useAppDispatch, useAppSelector} from '../../../hooks/hooks';
 import {
     selectActiveConversationMessages,
     selectActiveConversation,
@@ -11,7 +11,7 @@ import {
     getGroupChatMessages,
     getPrivateChatMessages
 } from '../chatSlice';
-import { selectIsConnected } from '../../socket/connectionSlice';
+import {selectIsConnected} from '../../socket/connectionSlice';
 import ChatWindowView from '../components/ChatWindow/ChatWindowView';
 
 /**
@@ -25,58 +25,39 @@ const ChatWindow: React.FC = () => {
 
     // ========== SELECTORS (Đọc từ MODEL) ==========
     const messages = useAppSelector(selectActiveConversationMessages);
-    const activeConversation  = useAppSelector(selectActiveConversation);
+    const activeConversation = useAppSelector(selectActiveConversation);
     const loading = useAppSelector(selectChatLoading);
     const error = useAppSelector(selectChatError);
     const currentPage = useAppSelector(selectCurrentPage);
     const hasMoreMessages = useAppSelector(selectHasMoreMessages);
     const isConnected = useAppSelector(selectIsConnected);
     const currentUser = useAppSelector((state) => state.auth.user);
+    const [sendError, setSendError] = useState<string | null>(null);
 
     const currentUsername = useMemo(() => {
         if (!activeConversation || messages.length === 0) {
-            return null;
+            return currentUser?.username || null;
         }
         const activeId = activeConversation.id;
-        // Tìm message được GỬI ĐẾN activeConversation
-        // → Sender của message đó là current user
         const sentMessage = messages.find(m =>
             m.receiver.id === activeId || m.receiver.name === activeId
         );
 
         if (sentMessage) {
-            console.log('Current user identified from SENT message:', sentMessage.sender.username);
             return sentMessage.sender.username;
         }
-        // Fallback: Tìm message NHẬN TỪ activeConversation
-        // → Receiver là current user
         const receivedMessage = messages.find(m =>
             m.sender.id === activeId || m.sender.username === activeId
         );
 
         if (receivedMessage) {
-            console.log('Current user identified from RECEIVED message:', receivedMessage.receiver.name);
             return receivedMessage.receiver.name;
         }
 
         console.warn('Cannot identify current user');
         return null;
-    }, [messages, activeConversation]);
+    }, [messages, activeConversation, currentUser]);
 
-    // Debug log
-    useEffect(() => {
-        console.log('ChatWindow Debug:', {
-            currentUsername,
-            activeConversationId: activeConversation?.id,
-            messagesCount: messages.length,
-            firstMessage: messages[0] ? {
-                sender: messages[0].sender.username,
-                receiver: messages[0].receiver.name
-            } : null
-        });
-    }, [currentUsername, activeConversation, messages]);
-
-    // ========== EFFECTS ==========
     // Auto scroll khi có message mới
     useEffect(() => {
         if (chatBodyRef.current) {
@@ -84,21 +65,32 @@ const ChatWindow: React.FC = () => {
         }
     }, [messages]);
 
-    // ========== EVENT HANDLERS (CONTROLLER LOGIC) ==========
     const handleSendMessage = useCallback(async (text: string) => {
         if (!activeConversation || !isConnected) {
-            console.error('Cannot send message: no active room or not connected');
             return;
         }
-
+        setSendError(null);
         try {
             await dispatch(sendChatMessage({
                 type: activeConversation.type === 'group' ? 'room' : 'people',
                 to: activeConversation.name,
                 mes: text
-            }));
-        } catch (error) {
+            })).unwrap();
+
+        } catch (error: any) {
             console.error('Failed to send message:', error);
+            const errorMsg = error.message?.toLowerCase() || '';
+            if (errorMsg.includes('not found') ||
+                errorMsg.includes('không tồn tại') ||
+                errorMsg.includes('user does not exist')) {
+                setSendError(`Không thể gửi tin: ${activeConversation.name} không tồn tại hoặc đã bị xóa`);
+            } else if (errorMsg.includes('timeout') || errorMsg.includes('network')) {
+                setSendError('Lỗi kết nối. Vui lòng kiểm tra internet và thử lại.');
+            } else if (errorMsg.includes('blocked') || errorMsg.includes('chặn')) {
+                setSendError('Bạn đã bị chặn bởi người dùng này.');
+            } else {
+                setSendError('Không thể gửi tin nhắn. Vui lòng thử lại.');
+            }
         }
     }, [dispatch, activeConversation, isConnected]);
 
@@ -120,7 +112,10 @@ const ChatWindow: React.FC = () => {
         }
     }, [dispatch, activeConversation, hasMoreMessages, loading, currentPage]);
 
-    // ========== RENDER VIEW ==========
+    const handleClearSendError = useCallback(() => {
+        setSendError(null);
+    }, []);
+
     return (
         <ChatWindowView
             // Data
@@ -131,12 +126,14 @@ const ChatWindow: React.FC = () => {
             // States
             loading={loading}
             error={error}
+            sendError={sendError}
             isConnected={isConnected}
             hasMoreMessages={hasMoreMessages}
 
             // Handlers
             onSendMessage={handleSendMessage}
             onLoadMore={handleLoadMore}
+            onClearSendError={handleClearSendError}
 
             // Refs
             chatBodyRef={chatBodyRef}

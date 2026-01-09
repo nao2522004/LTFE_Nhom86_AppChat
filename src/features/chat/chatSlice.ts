@@ -372,6 +372,16 @@ const chatSlice = createSlice({
             state.hasMoreMessages = action.payload;
         },
 
+        addUser: (state, action: PayloadAction<any>) => {
+            const exists = state.userList.find(
+                u => u.username === action.payload.username || u.id === action.payload.id
+            );
+            if (!exists) {
+                state.userList.push(action.payload);
+            } else {
+            }
+        },
+
         // ===== RESET =====
         resetChat: (state) => {
             state.messages = [];
@@ -466,8 +476,6 @@ const chatSlice = createSlice({
                 state.error = null;
             })
             .addCase(getPrivateChatMessages.fulfilled, (state, action) => {
-                console.log('GET_PEOPLE_CHAT_MES fulfilled:', action.payload);
-
                 state.loading = false;
                 const { messages, page, context } = action.payload;
                 const formattedMessages: Message[] = messages.map((raw: RawServerMessage) => {
@@ -620,6 +628,7 @@ export const {
     clearError,
     setCurrentPage,
     setHasMoreMessages,
+    addUser,
     resetChat
 } = chatSlice.actions;
 
@@ -643,7 +652,14 @@ export const selectActiveConversationMessages = (state: { chat: ChatState }) => 
     const {messages, activeConversationId} = state.chat;
     if (!activeConversationId) return [];
     return messages
-        .filter(m => m.receiver.id === activeConversationId || m.sender.id === activeConversationId)
+        .filter(m => {
+            const receiverId = m.receiver.id || m.receiver.name;
+            const senderId = m.sender.id || m.sender.username;
+            // Tin nhắn thuộc conversation nếu:
+            // - Gửi TỚI activeConversationId
+            // - HOẶC nhận TỪ activeConversationId
+            return receiverId === activeConversationId || senderId === activeConversationId;
+        })
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 };
 
