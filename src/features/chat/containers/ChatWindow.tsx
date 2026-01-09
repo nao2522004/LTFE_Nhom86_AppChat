@@ -45,7 +45,6 @@ const ChatWindow: React.FC = () => {
         );
 
         if (sentMessage) {
-            console.log('Current user identified from SENT message:', sentMessage.sender.username);
             return sentMessage.sender.username;
         }
         // Fallback: Tìm message NHẬN TỪ activeConversation
@@ -55,26 +54,12 @@ const ChatWindow: React.FC = () => {
         );
 
         if (receivedMessage) {
-            console.log('Current user identified from RECEIVED message:', receivedMessage.receiver.name);
             return receivedMessage.receiver.name;
         }
 
         console.warn('Cannot identify current user');
         return null;
     }, [messages, activeConversation]);
-
-    // Debug log
-    useEffect(() => {
-        console.log('ChatWindow Debug:', {
-            currentUsername,
-            activeConversationId: activeConversation?.id,
-            messagesCount: messages.length,
-            firstMessage: messages[0] ? {
-                sender: messages[0].sender.username,
-                receiver: messages[0].receiver.name
-            } : null
-        });
-    }, [currentUsername, activeConversation, messages]);
 
     // ========== EFFECTS ==========
     // Auto scroll khi có message mới

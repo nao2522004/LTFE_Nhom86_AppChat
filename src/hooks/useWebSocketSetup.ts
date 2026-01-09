@@ -55,6 +55,7 @@ export const useWebSocketSetup = () => {
     const userListLoadedRef = useRef(false);
     const isSetupRef = useRef(false);
     const handlersRegisteredRef = useRef(false);
+    const userListLoadingRef = useRef(false);
 
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -71,11 +72,15 @@ export const useWebSocketSetup = () => {
             dispatch(resetReconnectAttempts());
 
             // Load user list ONLY ONCE when connected
-            if (!userListLoadedRef.current) {
-                dispatch(getUserList());
+            if (!userListLoadedRef.current && !userListLoadingRef.current) {
                 userListLoadedRef.current = true;
+                dispatch(getUserList())
+                    .finally(() => {
+                        userListLoadedRef.current = true;
+                        userListLoadingRef.current = false;
+                    });
             } else {
-                console.log('[useWebSocketSetup] ⏭️ User list already loaded, skipping');
+                console.log('[useWebSocketSetup] User list already loaded/loading, skipping');
             }
         };
 
@@ -232,9 +237,6 @@ export const useWebSocketSetup = () => {
             websocketService.off('USER_OFFLINE', handleUserOffline);
 
             websocketService.off('message');
-
-            userListLoadedRef.current = false;
-            isSetupRef.current = false;
         };
     }, [dispatch, isAuthenticated, activeConversationId]);
 };

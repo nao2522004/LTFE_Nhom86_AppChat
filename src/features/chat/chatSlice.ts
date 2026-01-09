@@ -466,8 +466,6 @@ const chatSlice = createSlice({
                 state.error = null;
             })
             .addCase(getPrivateChatMessages.fulfilled, (state, action) => {
-                console.log('GET_PEOPLE_CHAT_MES fulfilled:', action.payload);
-
                 state.loading = false;
                 const { messages, page, context } = action.payload;
                 const formattedMessages: Message[] = messages.map((raw: RawServerMessage) => {

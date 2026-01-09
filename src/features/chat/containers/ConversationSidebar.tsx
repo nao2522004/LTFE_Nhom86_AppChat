@@ -77,17 +77,21 @@ const ConversationSidebar: React.FC = () => {
 
     const handleStartChat = async (username: string) => {
         try {
-            console.log('Starting chat with:', username);
+            // Check if user exists in current userList first
+            const existingUser = userList.find(
+                (u: any) => u.username === username || u.id === username
+            );
+
+            if (existingUser) {
+                dispatch(setActiveConversation(username));
+                await dispatch(getPrivateChatMessages({name: username, page: 1}));
+                return;
+            }
 
             const result = await dispatch(checkUserExist(username));
 
-            console.log('Full result:', result);
-
             if (checkUserExist.fulfilled.match(result)) {
                 const payload = result.payload;
-
-                console.log('Fulfilled payload:', payload);
-
                 // FIX: Check payload.status instead of payload.exists
                 let exists = false;
 
@@ -105,8 +109,6 @@ const ConversationSidebar: React.FC = () => {
                         exists = true;
                     }
                 }
-
-                console.log('Final exists value:', exists);
 
                 if (!exists) {
                     throw new Error('User không tồn tại');
