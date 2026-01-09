@@ -652,7 +652,14 @@ export const selectActiveConversationMessages = (state: { chat: ChatState }) => 
     const {messages, activeConversationId} = state.chat;
     if (!activeConversationId) return [];
     return messages
-        .filter(m => m.receiver.id === activeConversationId || m.sender.id === activeConversationId)
+        .filter(m => {
+            const receiverId = m.receiver.id || m.receiver.name;
+            const senderId = m.sender.id || m.sender.username;
+            // Tin nhắn thuộc conversation nếu:
+            // - Gửi TỚI activeConversationId
+            // - HOẶC nhận TỪ activeConversationId
+            return receiverId === activeConversationId || senderId === activeConversationId;
+        })
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 };
 
