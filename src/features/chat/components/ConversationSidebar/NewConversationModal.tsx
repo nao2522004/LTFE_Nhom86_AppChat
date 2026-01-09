@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 
 interface CreateConversationModalProps {
     onClose: () => void;
@@ -9,12 +9,12 @@ interface CreateConversationModalProps {
 }
 
 const NewConversationModal: React.FC<CreateConversationModalProps> = ({
-                                                                             onClose,
-                                                                             onCreateGroupChat,
-                                                                             onJoinGroupChat,
-                                                                             onStartChat,
-                                                                             userList
-                                                                         }) => {
+                                                                          onClose,
+                                                                          onCreateGroupChat,
+                                                                          onJoinGroupChat,
+                                                                          onStartChat,
+                                                                          userList
+                                                                      }) => {
     const [activeTab, setActiveTab] = useState<'create' | 'join' | 'people'>('people');
     const [groupName, setGroupName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +39,6 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
             onClose();
         } catch (err: any) {
             setError(err.message || 'Operation failed');
-        } finally {
             setLoading(false);
         }
     };
@@ -52,7 +51,6 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
             onClose();
         } catch (err: any) {
             setError(err.message || 'Failed to start chat');
-        } finally {
             setLoading(false);
         }
     };
@@ -60,12 +58,10 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
     // NEW: Handle direct username input
     const handleStartChatWithUsername = async () => {
         const username = searchQuery.trim();
-
         if (!username) {
             setError('Please enter a username');
             return;
         }
-
         await handleStartChat(username);
     };
 
@@ -80,6 +76,19 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
                     <h2 style={styles.title}>New Conversation</h2>
                     <button style={styles.closeBtn} onClick={onClose}>×</button>
                 </div>
+
+                {error && (
+                    <div style={styles.modalError}>
+                        <i className="fas fa-exclamation-circle"></i>
+                        <span>{error}</span>
+                        <button
+                            onClick={() => setError('')}
+                            style={styles.errorCloseBtn}
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
 
                 <div style={styles.tabs}>
                     <button
@@ -112,12 +121,6 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
                 </div>
 
                 <div style={styles.content}>
-                    {error && (
-                        <div style={styles.error}>
-                            {error}
-                        </div>
-                    )}
-
                     {/* DIRECT MESSAGE TAB */}
                     {activeTab === 'people' && (
                         <div style={styles.formGroup}>
@@ -179,7 +182,7 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
                                                     <span style={{
                                                         ...styles.statusDot,
                                                         backgroundColor: user.isOnline ? '#28a745' : '#999'
-                                                    }} />
+                                                    }}/>
                                                     {user.isOnline ? 'Online' : 'Offline'}
                                                 </div>
                                             </div>
@@ -424,7 +427,44 @@ const styles: { [key: string]: React.CSSProperties } = {
         textAlign: 'center',
         color: '#999',
         fontSize: '14px'
+    },
+
+    modalError: {
+        backgroundColor: '#fee', // Giữ nguyên tên CamelCase của bạn
+        border: '1px solid #fcc',
+        borderRadius: '8px',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        color: '#c33',
+        fontSize: '14px',
+        margin: '16px 24px',
+        animation: 'slideDown 0.3s ease'
+    },
+    modalErrorI: {
+        fontSize: '16px'
+    },
+    errorCloseBtn: {
+        marginLeft: 'auto',
+        background: 'none',
+        border: 'none',
+        fontSize: '20px',
+        cursor: 'pointer',
+        color: '#c33',
+        opacity: 0.7
+    },
+    chatErrorBanner: {
+        backgroundColor: '#fff3cd',
+        borderLeft: '4px solid #ffc107',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        color: '#856404',
+        fontSize: '14px',
+        animation: 'slideDown 0.3s ease'
     }
-};
+}
 
 export default NewConversationModal;

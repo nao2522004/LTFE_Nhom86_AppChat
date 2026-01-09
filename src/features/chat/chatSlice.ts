@@ -372,6 +372,16 @@ const chatSlice = createSlice({
             state.hasMoreMessages = action.payload;
         },
 
+        addUser: (state, action: PayloadAction<any>) => {
+            const exists = state.userList.find(
+                u => u.username === action.payload.username || u.id === action.payload.id
+            );
+            if (!exists) {
+                state.userList.push(action.payload);
+            } else {
+            }
+        },
+
         // ===== RESET =====
         resetChat: (state) => {
             state.messages = [];
@@ -618,6 +628,7 @@ export const {
     clearError,
     setCurrentPage,
     setHasMoreMessages,
+    addUser,
     resetChat
 } = chatSlice.actions;
 
