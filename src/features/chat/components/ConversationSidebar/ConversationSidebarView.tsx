@@ -13,7 +13,7 @@ interface Message {
 interface Conversation {
     id: string;
     name: string;
-    type: 'private' | 'group';
+    type: 'people' | 'room';
     lastMessage?: Message;
     unreadCount: number;
     updatedAt: string;
@@ -89,8 +89,8 @@ const ConversationSidebarView: React.FC<ConversationSidebarViewProps> = ({
             user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const privateChats = filteredConversations.filter(c => c.type === 'private');
-    const groupChats = filteredConversations.filter(c => c.type === 'group');
+    const peopleChats = filteredConversations.filter(c => c.type === 'people');
+    const roomChats = filteredConversations.filter(c => c.type === 'room');
 
     return (
         <div className={styles.sidebarContainer}>
@@ -122,13 +122,13 @@ const ConversationSidebarView: React.FC<ConversationSidebarViewProps> = ({
             {/* Conversations List */}
             <div className={styles.conversationsList}>
                 {/* Direct Messages Section */}
-                {(filteredUsers.length > 0 || privateChats.length > 0) && (
+                {(filteredUsers.length > 0 || peopleChats.length > 0) && (
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
                             <i className="fas fa-user"></i>
                             <span className={styles.sectionTitle}>Direct Messages</span>
                             <span className={styles.sectionCount}>
-                {filteredUsers.length + privateChats.length}
+                {filteredUsers.length + peopleChats.length}
               </span>
                         </div>
 
@@ -175,7 +175,7 @@ const ConversationSidebarView: React.FC<ConversationSidebarViewProps> = ({
                             })}
 
                             {/* Private conversations with messages */}
-                            {privateChats.map((conversation) => {
+                            {peopleChats.map((conversation) => {
                                 const isActive = conversation.id === activeConversationId;
 
                                 return (
@@ -224,16 +224,16 @@ const ConversationSidebarView: React.FC<ConversationSidebarViewProps> = ({
                 )}
 
                 {/* Groups Section */}
-                {groupChats.length > 0 && (
+                {roomChats.length > 0 && (
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
                             <i className="fas fa-users"></i>
                             <span className={styles.sectionTitle}>Groups</span>
-                            <span className={styles.sectionCount}>{groupChats.length}</span>
+                            <span className={styles.sectionCount}>{roomChats.length}</span>
                         </div>
 
                         <div className={styles.chatList}>
-                            {groupChats.map((conversation) => {
+                            {roomChats.map((conversation) => {
                                 const isActive = conversation.id === activeConversationId;
 
                                 return (

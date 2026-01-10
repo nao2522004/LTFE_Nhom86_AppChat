@@ -43,7 +43,7 @@ export interface MessageSender {
 export interface MessageReceiver {
     id: string;
     name: string;
-    type: 'user' | 'room';
+    type: 'people' | 'room';
     avatar?: string;
 }
 
@@ -133,7 +133,7 @@ export interface Conversation {
     updatedAt: string;
 }
 
-export type ConversationType = 'private' | 'group';
+export type ConversationType = 'people' | 'room';
 
 /**
  * Raw Message từ Server
@@ -274,21 +274,21 @@ function parseMessageContent(raw: RawServerMessage): MessageContent | undefined 
 function determineReceiverType(
     to: string,
     context?: TransformContext
-): 'user' | 'room' {
+): 'people' | 'room' {
     if (context) {
         const isRoom = context.conversations.some(c => c.name === to || c.id === to);
         if (isRoom) return 'room';
 
         const isUser = context.users.some(u => u.username === to || u.id === to);
-        if (isUser) return 'user';
+        if (isUser) return 'people';
     }
 
     if (/^\d+$/.test(to)) {
-        return 'user';
+        return 'people';
     }
 
     if (to.includes('@')) {
-        return 'user';
+        return 'people';
     }
 
     return 'room';

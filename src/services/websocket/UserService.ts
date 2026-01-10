@@ -36,7 +36,7 @@ export class UserService extends BaseService {
                 avatar: null,
                 isOnline: true,
                 lastSeen: item.actionTime,
-                type: 'user'
+                type: 'people'
             }));
 
         const conversations = dataArray
@@ -44,7 +44,7 @@ export class UserService extends BaseService {
             .map((item: any) => ({
                 id: item.name,
                 name: item.name,
-                type: 'group' as const,
+                type: 'room' as const,
                 participants: [],
                 unreadCount: 0,
                 createdAt: item.actionTime,

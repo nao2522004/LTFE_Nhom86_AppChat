@@ -11,11 +11,11 @@ export interface GetMessagesData {
     page: number;
 }
 
-export interface CreateGroupChatData {
+export interface CreateRoomData {
     name: string;
 }
 
-export interface JoinGroupChatData {
+export interface JoinRoomData {
     name: string;
 }
 
@@ -23,7 +23,7 @@ interface GetMessagesResponse {
     messages: any[];
 }
 
-interface CreateGroupChatResponse {
+interface CreateRoomResponse {
     room: any;
 }
 
@@ -32,7 +32,7 @@ export class ChatService extends BaseService {
         return this.send('SEND_CHAT', data);
     }
 
-    async getGroupChatMessages(data: GetMessagesData): Promise<GetMessagesResponse> {
+    async getRoomChatMessages(data: GetMessagesData): Promise<GetMessagesResponse> {
         const response = await this.sendAndWaitForResponse<any>(
             'GET_ROOM_CHAT_MES',
             data
@@ -45,7 +45,7 @@ export class ChatService extends BaseService {
         return { messages };
     }
 
-    async getPrivateChatMessages(data: GetMessagesData): Promise<any> {
+    async getPeopleChatMessages(data: GetMessagesData): Promise<any> {
         const response = await this.sendAndWaitForResponse<any>(
             'GET_PEOPLE_CHAT_MES',
             data
@@ -58,14 +58,14 @@ export class ChatService extends BaseService {
         return { messages };
     }
 
-    async createGroupChat(data: CreateGroupChatData): Promise<any> {
-        return this.sendAndWaitForResponse<CreateGroupChatResponse>(
+    async createRoom(data: CreateRoomData): Promise<any> {
+        return this.sendAndWaitForResponse<CreateRoomResponse>(
             'CREATE_ROOM',
             data
         );
     }
 
-    async joinGroupChat(data: JoinGroupChatData): Promise<any> {
+    async joinRoom(data: JoinRoomData): Promise<any> {
         return this.sendAndWaitForResponse('JOIN_ROOM', data);
     }
 

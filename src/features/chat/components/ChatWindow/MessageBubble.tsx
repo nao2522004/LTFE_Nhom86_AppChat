@@ -17,13 +17,21 @@ const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => 
                 {/* Show status for sent messages */}
                 {isSent && status && (
                     <span style={{
-                        fontSize: '10px',
+                        fontSize: '11px',
                         marginLeft: '8px',
-                        opacity: 0.7
+                        opacity: 0.8,
+                        display: 'inline-flex',
+                        alignItems: 'center'
                     }}>
-                        {status === 'sending' && '⏳'}
-                        {status === 'sent' && '✓'}
-                        {status === 'failed' && '❌'}
+                        {status === 'sending' && (
+                            <span title="Đang gửi...">⏳</span>
+                        )}
+                        {status === 'sent' && (
+                            <span title="Đã gửi">✓</span>
+                        )}
+                        {status === 'failed' && (
+                            <span title="Gửi thất bại" style={{ color: '#ff6b6b' }}>❌</span>
+                        )}
                     </span>
                 )}
             </div>

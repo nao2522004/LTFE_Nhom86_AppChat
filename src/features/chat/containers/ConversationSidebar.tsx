@@ -2,14 +2,14 @@ import React, {useState, useCallback, useEffect} from 'react';
 import {useAppDispatch, useAppSelector} from '../../../hooks/hooks';
 import {
     setActiveConversation,
-    getGroupChatMessages,
-    getPrivateChatMessages,
+    getRoomChatMessages,
+    getPeopleChatMessages,
     selectConversations,
     selectActiveConversationId,
     selectUserList,
     selectChatLoading,
-    createGroupChat,
-    joinGroupChat,
+    createRoom,
+    joinRoom,
     checkUserExist,
     addUser
 } from '../chatSlice';
@@ -40,9 +40,9 @@ const ConversationSidebar: React.FC = () => {
 
         // Load messages
         if (type === 'room') {
-            await dispatch(getGroupChatMessages({name: name, page: 1}));
+            await dispatch(getRoomChatMessages({name: name, page: 1}));
         } else {
-            await dispatch(getPrivateChatMessages({name: name, page: 1}));
+            await dispatch(getPeopleChatMessages({name: name, page: 1}));
         }
     }, [dispatch]);
 
@@ -50,25 +50,25 @@ const ConversationSidebar: React.FC = () => {
         setSearchQuery(value);
     }, []);
 
-    const handleCreateGroupChat = async (groupName: string) => {
+    const handleCreateRoom = async (roomName: string) => {
         try {
-            await dispatch(createGroupChat(groupName)).unwrap();
-            await dispatch(joinGroupChat(groupName)).unwrap();
+            await dispatch(createRoom(roomName)).unwrap();
+            await dispatch(joinRoom(roomName)).unwrap();
             // Set active và load messages
-            dispatch(setActiveConversation(groupName));
-            await dispatch(getGroupChatMessages({name: groupName, page: 1}));
+            dispatch(setActiveConversation(roomName));
+            await dispatch(getRoomChatMessages({name: roomName, page: 1}));
         } catch (error) {
             console.error('Failed to create room:', error);
             throw error;
         }
     };
 
-    const handleJoinGroupChat = async (groupName: string) => {
+    const handleJoinRoom = async (groupName: string) => {
         try {
-            await dispatch(joinGroupChat(groupName)).unwrap();
+            await dispatch(joinRoom(groupName)).unwrap();
             // Set active và load messages
             dispatch(setActiveConversation(groupName));
-            await dispatch(getGroupChatMessages({name: groupName, page: 1}));
+            await dispatch(getRoomChatMessages({name: groupName, page: 1}));
         } catch (error) {
             console.error('Failed to join room:', error);
             throw error;
@@ -84,7 +84,7 @@ const ConversationSidebar: React.FC = () => {
 
             if (existingUser) {
                 dispatch(setActiveConversation(username));
-                await dispatch(getPrivateChatMessages({name: username, page: 1}));
+                await dispatch(getPeopleChatMessages({name: username, page: 1}));
                 return;
             }
 
@@ -100,7 +100,7 @@ const ConversationSidebar: React.FC = () => {
                     else if ('exists' in payload) {
                         exists = payload.exists === true;
                     }
-                    else if ('user' in payload) {
+                    else if ('people' in payload) {
                         exists = true;
                     }
                 }
@@ -118,10 +118,10 @@ const ConversationSidebar: React.FC = () => {
                     avatar: null,
                     isOnline: true,
                     lastSeen: new Date().toISOString(),
-                    type: 'user'
+                    type: 'people'
                 }));
                 dispatch(setActiveConversation(username));
-                await dispatch(getPrivateChatMessages({name: username, page: 1}));
+                await dispatch(getPeopleChatMessages({name: username, page: 1}));
 
             } else if (checkUserExist.rejected.match(result)) {
                 console.error('Rejected:', result);
@@ -164,8 +164,8 @@ const ConversationSidebar: React.FC = () => {
             {showModal && (
                 <NewConversationModal
                     onClose={() => setShowModal(false)}
-                    onCreateGroupChat={handleCreateGroupChat}
-                    onJoinGroupChat={handleJoinGroupChat}
+                    onCreateGroupChat={handleCreateRoom}
+                    onJoinGroupChat={handleJoinRoom}
                     onStartChat={handleStartChat}
                     userList={userList}
                 />

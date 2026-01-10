@@ -58,10 +58,10 @@ class WebSocketService {
 
     // Chat methods
     sendChat = (data: any) => chatService.sendChat(data);
-    getGroupChatMessages = (data: any) => chatService.getGroupChatMessages(data);
-    getPrivateChatMessages = (data: any) => chatService.getPrivateChatMessages(data);
-    createGroupChat = (data: any) => chatService.createGroupChat(data);
-    joinGroupChat = (data: any) => chatService.joinGroupChat(data);
+    getRoomChatMessages = (data: any) => chatService.getRoomChatMessages(data);
+    getPeopleChatMessages = (data: any) => chatService.getPeopleChatMessages(data);
+    createRoom = (data: any) => chatService.createRoom(data);
+    joinRoom = (data: any) => chatService.joinRoom(data);
     onChatReceived = (callback: any) => chatService.onChatReceived(callback);
     offChatReceived = (callback?: any) => chatService.offChatReceived(callback);
 

@@ -1,7 +1,7 @@
 {
   "name": "appchat",
   "version": "0.1.0",
-  "private": true,
+  "people": true,
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.0",
     "@testing-library/dom": "^10.4.1",
