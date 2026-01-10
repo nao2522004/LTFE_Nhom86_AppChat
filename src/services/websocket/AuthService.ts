@@ -17,30 +17,39 @@ export interface RegisterData {
 }
 
 interface LoginResponse {
-    user: any;
-    token: string;
-    RE_LOGIN_CODE: string;
+    data: {
+        RE_LOGIN_CODE: string
+    },
+    event: String,
+    status: String
 }
 
 interface ReLoginResponse {
-    RE_LOGIN_CODE: string;
+    data: {
+        RE_LOGIN_CODE: string
+    },
+    event: String,
+    status: String
 }
 
 export class AuthService extends BaseService{
     async login(credentials: LoginData): Promise<any> {
-        const response = await this.sendAndWaitForResponse<LoginResponse>("LOGIN", credentials);
+        const response = await this.sendAndWaitForResponse<LoginResponse>("LOGIN", credentials, 120000);
 
-        if (response.RE_LOGIN_CODE) {
+        const token = response.data?.RE_LOGIN_CODE;
+
+        if (token) {
             try {
-                const encryptedToken = await encryptToken(response.RE_LOGIN_CODE);
+                const encryptedToken = await encryptToken(token);
+                const encryptedUser = await encryptToken(credentials.user);
 
                 localStorage.setItem("token", encryptedToken);
-                localStorage.setItem("user", credentials.user);
+                localStorage.setItem("user", encryptedUser);
 
                 console.log("Token encrypted and saved");
             } catch (error) {
                 console.error("Failed to encrypt token:", error);
-                localStorage.setItem("token", response.RE_LOGIN_CODE);
+                localStorage.setItem("token", token);
                 localStorage.setItem("user", credentials.user);
             }
         }
@@ -49,29 +58,32 @@ export class AuthService extends BaseService{
 
     async reLogin(credentials: ReLoginData): Promise<any> {
         let decryptedCode = credentials.code;
+        let decryptedUser = credentials.user;
 
         // decrypt token
         try {
             decryptedCode = await decryptToken(credentials.code);
+            decryptedUser = await decryptToken(credentials.user);
             console.log("Token decrypted for relogin");
         } catch (error) {
             console.warn("Token decryption failed, using original token");
         }
 
         const response = await this.sendAndWaitForResponse<ReLoginResponse>("RE_LOGIN", {
-            user: credentials.user,
+            user: decryptedUser,
             code: decryptedCode
-        });
+        }, 120000);
 
         // encrypt new token
-        if (response.RE_LOGIN_CODE) {
+        const token = response.data?.RE_LOGIN_CODE;
+        if (token) {
             try {
-                const encryptedToken = await encryptToken(response.RE_LOGIN_CODE);
+                const encryptedToken = await encryptToken(token);
                 localStorage.setItem("token", encryptedToken);
                 console.log("New token encrypted and saved");
             } catch (error) {
                 console.error("Failed to encrypt new token:", error);
-                localStorage.setItem("token", response.RE_LOGIN_CODE);
+                localStorage.setItem("token", token);
             }
         }
 
@@ -79,7 +91,7 @@ export class AuthService extends BaseService{
     }
 
     async register(credentials: RegisterData): Promise<any> {
-        return this.sendAndWaitForResponse('REGISTER', credentials);
+        return this.sendAndWaitForResponse('REGISTER', credentials, 120000);
     }
 
     async logout(): Promise<void> {

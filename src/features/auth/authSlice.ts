@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../../shared/types/user';
 import websocketService, {ReLoginData} from "../../services/websocket/MainService";
+import { decryptToken } from '../../shared/utils/encryption';
 
 interface AuthState {
     user: User | null;
@@ -24,13 +25,9 @@ export const login = createAsyncThunk(
     async (credentials: { user: string; pass: string }, { rejectWithValue }) => {
         try {
             websocketService.connect();
-            await websocketService.waitForConnection(20000);
+            await websocketService.waitForConnection(300000);
             
             const response = await websocketService.login(credentials);
-
-            if (response.RE_LOGIN_CODE) {
-                localStorage.setItem('user', credentials.user);
-            }
 
             return {
                 ...response,
@@ -48,20 +45,29 @@ export const reLogin = createAsyncThunk(
     async (credentials: ReLoginData, { rejectWithValue }) => {
         try {
             websocketService.connect();
-            await websocketService.waitForConnection(20000);
+            await websocketService.waitForConnection(300000);
 
             const response = await websocketService.reLogin(credentials);
 
-            if (!response.RE_LOGIN_CODE) {
+            if (!response.data.RE_LOGIN_CODE) {
                 localStorage.removeItem("user");
                 localStorage.removeItem("token");
                 websocketService.disconnect();
                 return rejectWithValue("Token timeout or invalid");
             }
 
+            // decrypt user
+            let decryptedUser = credentials.user
+            try {
+                decryptedUser = await decryptToken(credentials.user);
+                console.log("Token decrypted for relogin");
+            } catch (error) {
+                console.warn("Token decryption failed, using original token");
+            }
+
             return {
                 ...response,
-                username: credentials.user
+                username: decryptedUser
             };
         } catch(error: any) {
             localStorage.removeItem("user");
@@ -81,7 +87,7 @@ export const register = createAsyncThunk(
     ) => {
         try {
             websocketService.connect();
-            await websocketService.waitForConnection(20000);
+            await websocketService.waitForConnection(300000);
             
             const response = await websocketService.register(userData);
             return response;
