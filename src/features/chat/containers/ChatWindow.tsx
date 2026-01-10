@@ -8,8 +8,8 @@ import {
     selectCurrentPage,
     selectHasMoreMessages,
     sendChatMessage,
-    getGroupChatMessages,
-    getPrivateChatMessages
+    getRoomChatMessages,
+    getPeopleChatMessages
 } from '../chatSlice';
 import {selectIsConnected} from '../../socket/connectionSlice';
 import ChatWindowView from '../components/ChatWindow/ChatWindowView';
@@ -23,7 +23,6 @@ const ChatWindow: React.FC = () => {
     const dispatch = useAppDispatch();
     const chatBodyRef = useRef<HTMLDivElement>(null);
 
-    // ========== SELECTORS (Đọc từ MODEL) ==========
     const messages = useAppSelector(selectActiveConversationMessages);
     const activeConversation = useAppSelector(selectActiveConversation);
     const loading = useAppSelector(selectChatLoading);
@@ -35,28 +34,8 @@ const ChatWindow: React.FC = () => {
     const [sendError, setSendError] = useState<string | null>(null);
 
     const currentUsername = useMemo(() => {
-        if (!activeConversation || messages.length === 0) {
-            return currentUser?.username || null;
-        }
-        const activeId = activeConversation.id;
-        const sentMessage = messages.find(m =>
-            m.receiver.id === activeId || m.receiver.name === activeId
-        );
-
-        if (sentMessage) {
-            return sentMessage.sender.username;
-        }
-        const receivedMessage = messages.find(m =>
-            m.sender.id === activeId || m.sender.username === activeId
-        );
-
-        if (receivedMessage) {
-            return receivedMessage.receiver.name;
-        }
-
-        console.warn('Cannot identify current user');
-        return null;
-    }, [messages, activeConversation, currentUser]);
+        return currentUser?.username || null;
+    }, [currentUser]);
 
     // Auto scroll khi có message mới
     useEffect(() => {
@@ -72,7 +51,7 @@ const ChatWindow: React.FC = () => {
         setSendError(null);
         try {
             await dispatch(sendChatMessage({
-                type: activeConversation.type === 'group' ? 'room' : 'people',
+                type: activeConversation.type === 'room' ? 'room' : 'people',
                 to: activeConversation.name,
                 mes: text
             })).unwrap();
@@ -99,13 +78,13 @@ const ChatWindow: React.FC = () => {
 
         const nextPage = currentPage + 1;
 
-        if (activeConversation.type === 'group') {
-            await dispatch(getGroupChatMessages({
+        if (activeConversation.type === 'room') {
+            await dispatch(getRoomChatMessages({
                 name: activeConversation.name,
                 page: nextPage
             }));
         } else {
-            await dispatch(getPrivateChatMessages({
+            await dispatch(getPeopleChatMessages({
                 name: activeConversation.name,
                 page: nextPage
             }));

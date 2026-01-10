@@ -27,8 +27,15 @@ export const login = createAsyncThunk(
             await websocketService.waitForConnection(20000);
             
             const response = await websocketService.login(credentials);
-            
-            return response;
+
+            if (response.RE_LOGIN_CODE) {
+                localStorage.setItem('user', credentials.user);
+            }
+
+            return {
+                ...response,
+                username: credentials.user
+            };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Đăng nhập thất bại');
         }
@@ -52,7 +59,10 @@ export const reLogin = createAsyncThunk(
                 return rejectWithValue("Token timeout or invalid");
             }
 
-            return response;
+            return {
+                ...response,
+                username: credentials.user
+            };
         } catch(error: any) {
             localStorage.removeItem("user");
             localStorage.removeItem("token");
@@ -153,7 +163,16 @@ const authSlice = createSlice({
             .addCase(login.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isAuthenticated = true;
-                state.user = action.payload.user;
+                state.user = {
+                    id: action.payload.username,
+                    username: action.payload.username,
+                    email: '',
+                    displayName: action.payload.username,
+                    avatar: `https://i.pravatar.cc/150?u=${action.payload.username}`,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    isOnline: true
+                };
                 state.token = action.payload.token;
                 state.error = null;
             })
@@ -171,6 +190,16 @@ const authSlice = createSlice({
             .addCase(reLogin.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isAuthenticated = true;
+                state.user = {
+                    id: action.payload.username,
+                    username: action.payload.username,
+                    email: '',
+                    displayName: action.payload.username,
+                    avatar: `https://i.pravatar.cc/150?u=${action.payload.username}`,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    isOnline: true
+                };
                 state.token = action.payload.RE_LOGIN_CODE;
                 state.error = null;
             })

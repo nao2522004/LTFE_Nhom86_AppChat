@@ -13,10 +13,10 @@ import {
     addConversation,
     getUserList,
     updateConversation,
-    incrementUnreadCount, addUser
+    incrementUnreadCount, addUser, removeMessage
 } from '../features/chat/chatSlice';
 import websocketService from "../services/websocket/MainService";
-import {RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
+import {Message, RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
 
 /**
  * Hook quản lý vòng đời và lắng nghe các Broadcast Responses từ WebSocket Server.
@@ -117,6 +117,7 @@ export const useWebSocketSetup = () => {
             console.log('SEND_CHAT broadcast received:', message);
             if (message.status === 'success' && message.data) {
                 const state = (dispatch as any).getState();
+                const currentUser = state.auth.user;
                 const context: TransformContext = {
                     conversations: state.chat.conversations.map((c: any) => ({
                         id: c.id,
@@ -140,60 +141,66 @@ export const useWebSocketSetup = () => {
 
                 const transformedMessage = transformServerMessage(rawMessage, context);
 
+                const isSentByMe = currentUser &&
+                    transformedMessage.sender.username === currentUser.username;
+
+                if (isSentByMe) {
+                    console.log('%c[SEND_CHAT] Own message - Finding temp to replace',
+                        'background: #f39c12; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold'
+                    );
+
+                    // TÌM temp message matching
+                    const tempMessages = state.chat.messages.filter(
+                        (m: Message) =>
+                            m.id.startsWith('temp_') &&
+                            m.content === transformedMessage.content &&
+                            m.receiver.id === transformedMessage.receiver.id &&
+                            m.status !== 'failed'  // Chỉ replace message đang pending/sending
+                    );
+
+                    if (tempMessages.length > 0) {
+                        const tempMessage = tempMessages[0];
+
+                        console.log('%c[SEND_CHAT] Replacing temp message',
+                            'background: #8e44ad; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold',
+                            {
+                                tempId: tempMessage.id,
+                                serverId: transformedMessage.id,
+                                content: transformedMessage.content
+                            }
+                        );
+
+                        dispatch(removeMessage(tempMessage.id));
+
+                        // DD server message với ID thật
+                        dispatch(addMessage({
+                            ...transformedMessage,
+                            status: 'sent'  // Server confirmed
+                        }));
+
+                        // Update conversation
+                        updateConversationWithMessage(dispatch, transformedMessage, state.chat.activeConversationId);
+
+                        return;
+                    } else {
+                        console.log('%c[SEND_CHAT] Temp message not found, adding server message',
+                            'background: #e67e22; color: white; padding: 2px 8px; border-radius: 3px;'
+                        );
+                    }
+                }
+
+                // Nếu là tin của NGƯỜI KHÁC → ADD bình thường
+                console.log('%c[SEND_CHAT] Message from other user',
+                    'background: #16a085; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold',
+                    {
+                        from: transformedMessage.sender.username,
+                        content: transformedMessage.content
+                    }
+                );
+
                 dispatch(addMessage(transformedMessage));
 
-                const sender = transformedMessage.sender.username;
-                const receiver = transformedMessage.receiver.id;
-
-                const conversationId = message.data.to;
-
-                dispatch(updateConversation({
-                    id: sender,
-                    updates: {
-                        lastMessage: transformedMessage,
-                        updatedAt: transformedMessage.timestamp
-                    }
-                }));
-
-                // Update conversation với receiver
-                dispatch(updateConversation({
-                    id: receiver,
-                    updates: {
-                        lastMessage: transformedMessage,
-                        updatedAt: transformedMessage.timestamp
-                    }
-                }));
-
-                if (sender !== activeConversationId) {
-                    dispatch(incrementUnreadCount(sender));
-                }
-                if (receiver !== activeConversationId) {
-                    dispatch(incrementUnreadCount(receiver));
-                }
-
-                dispatch(updateConversation({
-                    id: conversationId,
-                    updates: {
-                        lastMessage: transformedMessage,
-                        updatedAt: transformedMessage.timestamp
-                    }
-                }));
-
-                if (conversationId !== activeConversationId) {
-                    dispatch(incrementUnreadCount(conversationId));
-                }
-
-                dispatch(updateConversation({
-                    id: conversationId,
-                    updates: {
-                        lastMessage: transformedMessage,
-                        updatedAt: transformedMessage.timestamp
-                    }
-                }));
-
-                if (conversationId !== activeConversationId) {
-                    dispatch(incrementUnreadCount(conversationId));
-                }
+                updateConversationWithMessage(dispatch, transformedMessage, state.chat.activeConversationId);
 
                 dispatch(addUser({
                     id: transformedMessage.sender.username,
@@ -203,15 +210,44 @@ export const useWebSocketSetup = () => {
                     isOnline: true,
                     type: 'user'
                 }));
-
-                console.log('Message processed and room updated:', {
-                    messageId: transformedMessage.id,
-                    conversationId: conversationId,
-                    isActiveConversation: conversationId === activeConversationId,
-                    unreadIncremented: conversationId !== activeConversationId
-                });
             }
         };
+
+        // Helper function để update conversation
+        function updateConversationWithMessage(
+            dispatch: any,
+            message: Message,
+            activeConversationId: string | null
+        ) {
+            const sender = message.sender.username;
+            const receiver = message.receiver.id;
+
+            // Update conversation của sender
+            dispatch(updateConversation({
+                id: sender,
+                updates: {
+                    lastMessage: message,
+                    updatedAt: message.timestamp
+                }
+            }));
+
+            // Update conversation của receiver
+            dispatch(updateConversation({
+                id: receiver,
+                updates: {
+                    lastMessage: message,
+                    updatedAt: message.timestamp
+                }
+            }));
+
+            // Increment unread count nếu không phải active conversation
+            if (sender !== activeConversationId) {
+                dispatch(incrementUnreadCount(sender));
+            }
+            if (receiver !== activeConversationId) {
+                dispatch(incrementUnreadCount(receiver));
+            }
+        }
 
         // User join/leave room events
         const handleJoinRoom = (data: any) => {

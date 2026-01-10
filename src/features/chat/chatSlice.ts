@@ -34,14 +34,14 @@ const initialState: ChatState = {
  * EVENT: CREATE_ROOM API
  * Request: DATA: { "name": "ABC" }
  */
-export const createGroupChat = createAsyncThunk(
-    'chat/createGroupChat',
+export const createRoom = createAsyncThunk(
+    'chat/createRoom',
     async (groupName: string, {rejectWithValue}) => {
         try {
-            const response = await websocketService.createGroupChat(groupName);
+            const response = await websocketService.createRoom(groupName);
             return response;
         } catch (error: any) {
-            return rejectWithValue(error.message || 'Failed to create group chat');
+            return rejectWithValue(error.message || 'Failed to create room chat');
         }
     }
 );
@@ -50,11 +50,11 @@ export const createGroupChat = createAsyncThunk(
  * EVENT: JOIN_ROOM API
  * Request: DATA: { "name": "ABC" }
  */
-export const joinGroupChat = createAsyncThunk(
-    'chat/joinGroupChat',
-    async (groupName: string, {rejectWithValue}) => {
+export const joinRoom = createAsyncThunk(
+    'chat/joinRoom',
+    async (roomName: string, {rejectWithValue}) => {
         try {
-            const response = await websocketService.joinGroupChat(groupName);
+            const response = await websocketService.joinRoom(roomName);
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to join room');
@@ -66,11 +66,11 @@ export const joinGroupChat = createAsyncThunk(
  * GET_ROOM_CHAT_MES API
  * Request: { "name": "ABC", "page": 1 }
  */
-export const getGroupChatMessages = createAsyncThunk(
-    'chat/getGroupChatMessages',
+export const getRoomChatMessages = createAsyncThunk(
+    'chat/getRoomChatMessages',
     async ({name, page}: { name: string; page: number }, {rejectWithValue, getState}) => {
         try {
-            const response = await websocketService.getGroupChatMessages({name, page});
+            const response = await websocketService.getRoomChatMessages({name, page});
             const state = getState() as any;
             const context: TransformContext = {
                 conversations: state.chat.conversations.map((c: Conversation) => ({
@@ -84,7 +84,7 @@ export const getGroupChatMessages = createAsyncThunk(
             };
             return {name, messages: response.messages || [], page, context};
         } catch (error: any) {
-            return rejectWithValue(error.message || 'Failed to get group chat messages');
+            return rejectWithValue(error.message || 'Failed to get room chat messages');
         }
     }
 );
@@ -93,11 +93,11 @@ export const getGroupChatMessages = createAsyncThunk(
  * GET_PEOPLE_CHAT_MES API
  * Request: { "name": "ti", "page": 1 }
  */
-export const getPrivateChatMessages = createAsyncThunk(
-    'chat/getPrivateChatMessages',
+export const getPeopleChatMessages = createAsyncThunk(
+    'chat/getPeopleChatMessages',
     async ({name, page}: { name: string; page: number }, {rejectWithValue, getState}) => {
         try {
-            const response = await websocketService.getPrivateChatMessages({name, page});
+            const response = await websocketService.getPeopleChatMessages({name, page});
             const state = getState() as any;
             const context: TransformContext = {
                 conversations: state.chat.conversations.map((c: Conversation) => ({
@@ -124,12 +124,74 @@ export const sendChatMessage = createAsyncThunk(
     'chat/sendMessage',
     async (
         {type, to, mes}: { type: 'room' | 'people'; to: string; mes: string },
-        {rejectWithValue}
+        {rejectWithValue, getState, dispatch}
     ) => {
         try {
+            const state = getState() as any;
+            const currentUser = state.auth.user;
+
+            if (!currentUser) {
+                throw new Error('User not authenticated');
+            }
+            const tempMessage: Message = {
+                id: `temp_${Date.now()}_${Math.random()}`,  // ← Unique ID
+                content: mes,
+                contentData: {
+                    type: 'text',
+                    text: mes
+                },
+                sender: {
+                    id: currentUser.username,
+                    username: currentUser.username,
+                    displayName: currentUser.displayName || currentUser.username,
+                    avatar: currentUser.avatar || `https://i.pravatar.cc/150?u=${currentUser.username}`
+                },
+                receiver: {
+                    id: to,
+                    name: to,
+                    type: type === 'room' ? 'room' : 'people',
+                    avatar: `https://i.pravatar.cc/150?u=${to}`
+                },
+                timestamp: new Date().toISOString(),
+                status: 'sending',
+                type: 'text',
+                reactions: []
+            };
+
+            console.log('%c[SendMessage] Adding temp message',
+                'background: #9b59b6; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold',
+                {
+                    tempId: tempMessage.id,
+                    content: tempMessage.content,
+                    to: to
+                }
+            );
+            dispatch(addMessage(tempMessage));
+
             await websocketService.sendChat({type, to, mes});
-            return {type, to, mes, timestamp: new Date().toISOString()};
+
+            console.log('%c[SendMessage] Sent to server',
+                'background: #27ae60; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold'
+            );
+
+            dispatch(updateMessage({
+                id: tempMessage.id,
+                updates: { status: 'sent' }
+            }));
+
+            return {
+                type,
+                to,
+                mes,
+                tempId: tempMessage.id,
+                timestamp: tempMessage.timestamp
+            };
+
         } catch (error: any) {
+            console.error('%c[SendMessage] Failed',
+                'background: #e74c3c; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold',
+                error
+            );
             return rejectWithValue(error.message || 'Failed to send message');
         }
     }
@@ -195,7 +257,7 @@ export const startChatWithUser = createAsyncThunk(
             };
 
             // 4. Load messages (page 1)
-            const messagesResult = await dispatch(getPrivateChatMessages({
+            const messagesResult = await dispatch(getPeopleChatMessages({
                 name: username,
                 page: 1
             })).unwrap();
@@ -401,11 +463,11 @@ const chatSlice = createSlice({
     extraReducers: (builder) => {
         // ===== CREATE ROOM =====
         builder
-            .addCase(createGroupChat.pending, (state) => {
+            .addCase(createRoom.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(createGroupChat.fulfilled, (state, action) => {
+            .addCase(createRoom.fulfilled, (state, action) => {
                 state.loading = false;
                 // Add room to list if returned from API
                 if (action.payload.room) {
@@ -415,18 +477,18 @@ const chatSlice = createSlice({
                     }
                 }
             })
-            .addCase(createGroupChat.rejected, (state, action) => {
+            .addCase(createRoom.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
         // ===== JOIN GROUP CHAT =====
         builder
-            .addCase(joinGroupChat.pending, (state) => {
+            .addCase(joinRoom.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(joinGroupChat.fulfilled, (state, action) => {
+            .addCase(joinRoom.fulfilled, (state, action) => {
                 state.loading = false;
                 // Subscribe to room after joining
                 if (action.payload.groupName) {
@@ -435,18 +497,18 @@ const chatSlice = createSlice({
                     }
                 }
             })
-            .addCase(joinGroupChat.rejected, (state, action) => {
+            .addCase(joinRoom.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
         // ===== GET GROUP CHAT MESSAGES =====
         builder
-            .addCase(getGroupChatMessages.pending, (state) => {
+            .addCase(getRoomChatMessages.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getGroupChatMessages.fulfilled, (state, action) => {
+            .addCase(getRoomChatMessages.fulfilled, (state, action) => {
                 state.loading = false;
                 const { messages, page, context } = action.payload;
 
@@ -464,18 +526,18 @@ const chatSlice = createSlice({
                 state.currentPage = page;
                 state.hasMoreMessages = messages.length > 0;
             })
-            .addCase(getGroupChatMessages.rejected, (state, action) => {
+            .addCase(getRoomChatMessages.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
         // ===== GET PRIVATE CHAT MESSAGES =====
         builder
-            .addCase(getPrivateChatMessages.pending, (state) => {
+            .addCase(getPeopleChatMessages.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getPrivateChatMessages.fulfilled, (state, action) => {
+            .addCase(getPeopleChatMessages.fulfilled, (state, action) => {
                 state.loading = false;
                 const { messages, page, context } = action.payload;
                 const formattedMessages: Message[] = messages.map((raw: RawServerMessage) => {
@@ -492,7 +554,7 @@ const chatSlice = createSlice({
                 state.currentPage = page;
                 state.hasMoreMessages = messages.length > 0;
             })
-            .addCase(getPrivateChatMessages.rejected, (state, action) => {
+            .addCase(getPeopleChatMessages.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
@@ -671,14 +733,14 @@ export const selectActiveConversation = (state: { chat: ChatState }) => {
     const conversation = conversations.find(c => c.id === activeConversationId);
     if (conversation) return conversation;
 
-    // Check if it's a user (private chat)
+    // Check if it's a user (people chat)
     const user = userList.find(u => u.username === activeConversationId || u.id === activeConversationId);
     if (user) {
         // Convert user to room format
         return {
             id: user.username,
             name: user.displayName || user.username,
-            type: 'private' as const,
+            type: 'people' as const,
             participants: [user.username],
             unreadCount: 0,
             createdAt: new Date().toISOString(),
@@ -697,10 +759,10 @@ export const selectIsConversationSubscribed = (conversationId: string) => (state
     return state.chat.subscribedConversationIds.includes(conversationId);
 };
 
-export const selectPrivateChats = (state: { chat: ChatState }) =>
-    state.chat.conversations.filter(c => c.type === 'private');
+export const selectPeopleChats  = (state: { chat: ChatState }) =>
+    state.chat.conversations.filter(c => c.type === 'people');
 
-export const selectGroupChats = (state: { chat: ChatState }) =>
-    state.chat.conversations.filter(c => c.type === 'group');
+export const selectRoomChats = (state: { chat: ChatState }) =>
+    state.chat.conversations.filter(c => c.type === 'room');
 
 export default chatSlice.reducer;

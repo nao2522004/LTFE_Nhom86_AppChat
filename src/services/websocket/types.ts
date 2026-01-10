@@ -60,7 +60,7 @@ export interface UserStatusData {
 export interface ConversationData {
     id: string;
     name?: string;
-    type: 'private' | 'group';
+    type: 'people' | 'group';
     participants: string[];
     lastMessage?: any;
     createdAt: string;

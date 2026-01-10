@@ -23,7 +23,7 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
 
     const handleSubmit = async () => {
         if (!groupName.trim() && activeTab !== 'people') {
-            setError('Please enter a group name');
+            setError('Please enter a room name');
             return;
         }
 
@@ -203,7 +203,7 @@ const NewConversationModal: React.FC<CreateConversationModalProps> = ({
                                 type="text"
                                 value={groupName}
                                 onChange={(e) => setGroupName(e.target.value)}
-                                placeholder="Enter group name..."
+                                placeholder="Enter room name..."
                                 style={styles.input}
                                 disabled={loading}
                             />

@@ -22,23 +22,23 @@ function App() {
 
         const checkAuth = async () => {
             const token = localStorage.getItem("token");
-            const user = localStorage.getItem("user");
+            const username = localStorage.getItem("user");
 
             console.log('%c[App] Checking auth...',
                 'background: #3498db; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
-                { token: token ? '✓ exists' : '✗ missing', user: user ? '✓ exists' : '✗ missing' }
+                { token: token ? '✓ exists' : '✗ missing', user: username ? '✓ exists' : '✗ missing' }
             );
 
-            if (token && user) {
+            if (token && username) {
                 try {
                     console.log('%c[App] Token found, attempting reLogin...',
                         'background: #f39c12; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
-                        { user, token: token.substring(0, 20) + '...' }
+                        { username, token: token.substring(0, 20) + '...' }
                     );
 
                     dispatch(setConnecting());
 
-                    const result = await dispatch(reLogin({user: user, code: token}));
+                    const result = await dispatch(reLogin({user: username, code: token}));
 
                     console.log('%c[App] reLogin result:',
                         'background: #2ecc71; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold',
