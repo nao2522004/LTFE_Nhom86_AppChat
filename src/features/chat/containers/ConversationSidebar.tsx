@@ -1,18 +1,22 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useAppDispatch, useAppSelector} from '../../../hooks/hooks';
 import {
-    setActiveConversation,
-    getRoomChatMessages,
-    getPeopleChatMessages,
-    selectConversations,
-    selectActiveConversationId,
-    selectUserList,
-    selectChatLoading,
-    createRoom,
-    joinRoom,
-    checkUserExist,
-    addUser
+    addUser, selectAllConversations, selectAllUsers
 } from '../chatSlice';
+
+import {
+    checkUserExist,
+    createRoom,
+    getPeopleMessages,
+    getRoomMessages, joinRoom
+
+} from '../chatThunks';
+
+import {
+    selectActiveConversationId, selectMessagesLoading, setActiveConversation
+
+} from '../../ui/uiSlice';
+
 import ConversationSidebarView from '../components/ConversationSidebar/ConversationSidebarView';
 import NewConversationModal from '../components/ConversationSidebar/NewConversationModal';
 
@@ -25,10 +29,10 @@ const ConversationSidebar: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
 
-    const conversations = useAppSelector(selectConversations);
+    const conversations = useAppSelector(selectAllConversations);
+    const userList = useAppSelector(selectAllUsers);
     const activeConversationId = useAppSelector(selectActiveConversationId);
-    const userList = useAppSelector(selectUserList);
-    const loading = useAppSelector(selectChatLoading);
+    const loading = useAppSelector(selectMessagesLoading);
 
     const handleSelectConversation = useCallback(async (
         id: string,
@@ -40,9 +44,9 @@ const ConversationSidebar: React.FC = () => {
 
         // Load messages
         if (type === 'room') {
-            await dispatch(getRoomChatMessages({name: name, page: 1}));
+            await dispatch(getRoomMessages({name: name, page: 1}));
         } else {
-            await dispatch(getPeopleChatMessages({name: name, page: 1}));
+            await dispatch(getPeopleMessages({name: name, page: 1}));
         }
     }, [dispatch]);
 
@@ -56,7 +60,7 @@ const ConversationSidebar: React.FC = () => {
             await dispatch(joinRoom(roomName)).unwrap();
             // Set active và load messages
             dispatch(setActiveConversation(roomName));
-            await dispatch(getRoomChatMessages({name: roomName, page: 1}));
+            await dispatch(getRoomMessages({name: roomName, page: 1}));
         } catch (error) {
             console.error('Failed to create room:', error);
             throw error;
@@ -68,7 +72,7 @@ const ConversationSidebar: React.FC = () => {
             await dispatch(joinRoom(groupName)).unwrap();
             // Set active và load messages
             dispatch(setActiveConversation(groupName));
-            await dispatch(getRoomChatMessages({name: groupName, page: 1}));
+            await dispatch(getRoomMessages({name: groupName, page: 1}));
         } catch (error) {
             console.error('Failed to join room:', error);
             throw error;
@@ -84,7 +88,7 @@ const ConversationSidebar: React.FC = () => {
 
             if (existingUser) {
                 dispatch(setActiveConversation(username));
-                await dispatch(getPeopleChatMessages({name: username, page: 1}));
+                await dispatch(getPeopleMessages({name: username, page: 1}));
                 return;
             }
 
@@ -121,7 +125,7 @@ const ConversationSidebar: React.FC = () => {
                     type: 'people'
                 }));
                 dispatch(setActiveConversation(username));
-                await dispatch(getPeopleChatMessages({name: username, page: 1}));
+                await dispatch(getPeopleMessages({name: username, page: 1}));
 
             } else if (checkUserExist.rejected.match(result)) {
                 console.error('Rejected:', result);

@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import styles from './ConnectionStatusIndicator.module.css';
 import {useAppSelector} from "../../../hooks/hooks";
-import {selectConnectionStatus, selectMaxReconnectAttempts, selectReconnectAttempts} from "../connectionSlice";
+import {selectSocketStatus, selectMaxReconnectAttempts, selectReconnectAttempts} from "../socketSlice";
 
 const SocketStatusIndicator: React.FC = () => {
-    const status = useAppSelector(selectConnectionStatus);
+    const status = useAppSelector(selectSocketStatus);
     const reconnectAttempts = useAppSelector(selectReconnectAttempts);
     const maxAttempts = useAppSelector(selectMaxReconnectAttempts);
 

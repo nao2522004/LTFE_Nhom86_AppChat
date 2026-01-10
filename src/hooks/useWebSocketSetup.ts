@@ -1,91 +1,92 @@
-import {useEffect, useRef} from 'react';
-import {useAppDispatch, useAppSelector} from './hooks';
+import { useEffect, useRef } from 'react';
+import { useAppDispatch, useAppSelector } from './hooks';
 import {
     setConnected,
     setDisconnected,
     setReconnecting,
     incrementReconnectAttempts,
     resetReconnectAttempts,
-    setConnectionError,
-} from '../features/socket/connectionSlice';
+    setSocketError,
+} from '../features/socket/socketSlice';
 import {
     addMessage,
-    addConversation,
-    getUserList,
-    updateConversation,
-    incrementUnreadCount, addUser, removeMessage
+    updateMessage,
+    removeMessage,
+    addUser,
+    updateConversation, incrementUnreadCount, addConversation,
 } from '../features/chat/chatSlice';
+import { getUserList } from '../features/chat/chatThunks';
 import websocketService from "../services/websocket/MainService";
-import {Message, RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
+import { Message, RawServerMessage, TransformContext, transformServerMessage } from "../shared/types/chat";
 
 /**
- * Hook quản lý vòng đời và lắng nghe các Broadcast Responses từ WebSocket Server.
- *
- * @description
- * Hook này đóng vai trò là **Trạm thu phát Broadcast Responses** (không phải gửi request):
- *
- * 1. **Lắng nghe Broadcast Responses**:
- *    - Server gửi response tới NHIỀU clients cùng lúc (broadcast)
- *    - Ví dụ: SEND_CHAT, USER_ONLINE, JOIN_ROOM, USER_OFFLINE
- *    - Khác với Request-Response (1-to-1), đây là response dạng 1-to-Many
- *
- * 2. **Transform Data (Middleware)**:
- *    - Nhận response thô từ server: `{ event, status, data, mes }`
- *    - Chuẩn hóa về format của app (Message interface, Room interface...)
- *    - Validate data trước khi dispatch
- *
- * 3. **Cập nhật Redux Store**:
- *    - Dispatch actions để cập nhật state (addMessage, updateRoom...)
- *    - UI tự động re-render theo state mới
- *
- * @note
- * - Hook này **KHÔNG GỌI** các service methods (login, getRoomMessages...)
- * - Hook này **CHỈ LẮNG NGHE** broadcast responses từ server
- * - Request-Response (1-to-1) được xử lý bởi các service methods trong components/thunks
- *
+ * Hook quản lý WebSocket lifecycle và broadcast responses
  */
-
 export const useWebSocketSetup = () => {
     const dispatch = useAppDispatch();
-    const {isAuthenticated} = useAppSelector((state) => state.auth);
+    const { isAuthenticated } = useAppSelector((state) => state.auth);
+    const activeConversationId = useAppSelector((state) => state.ui.activeConversationId);
 
-    const activeConversationId = useAppSelector((state) => state.chat.activeConversationId);
-
-    // Track if user list has been loaded
     const userListLoadedRef = useRef(false);
     const isSetupRef = useRef(false);
     const handlersRegisteredRef = useRef(false);
-    const userListLoadingRef = useRef(false);
 
     useEffect(() => {
         if (!isAuthenticated) return;
-
-        if (isSetupRef.current) {
-            return;
-        }
+        if (isSetupRef.current) return;
 
         isSetupRef.current = true;
 
-        const handleOpen = () => {
+        // ===== HELPER FUNCTION =====
+        function updateConversationWithMessage(
+            dispatch: any,
+            message: Message,
+            activeConversationId: string | null
+        ) {
+            const sender = message.sender.username;
+            const receiver = message.receiver.id;
 
+            // Update conversations
+            dispatch(updateConversation({
+                id: sender,
+                updates: {
+                    lastMessage: message,
+                    updatedAt: message.timestamp
+                }
+            }));
+
+            dispatch(updateConversation({
+                id: receiver,
+                updates: {
+                    lastMessage: message,
+                    updatedAt: message.timestamp
+                }
+            }));
+
+            // Increment unread count if not active
+            if (sender !== activeConversationId) {
+                dispatch(incrementUnreadCount(sender));
+            }
+            if (receiver !== activeConversationId) {
+                dispatch(incrementUnreadCount(receiver));
+            }
+        }
+
+        // ===== CONNECTION HANDLERS =====
+        const handleOpen = () => {
+            console.log('WebSocket Connected');
             dispatch(setConnected());
             dispatch(resetReconnectAttempts());
 
             // Load user list ONLY ONCE when connected
-            if (!userListLoadedRef.current && !userListLoadingRef.current) {
+            if (!userListLoadedRef.current) {
                 userListLoadedRef.current = true;
-                dispatch(getUserList())
-                    .finally(() => {
-                        userListLoadedRef.current = true;
-                        userListLoadingRef.current = false;
-                    });
-            } else {
-                console.log('[useWebSocketSetup] User list already loaded/loading, skipping');
+                dispatch(getUserList());
             }
         };
 
         const handleClose = (data: any) => {
-            console.log('WebSocket Closed:');
+            console.log('WebSocket Closed:', data);
             dispatch(setDisconnected({
                 isManual: false,
                 error: data.reason
@@ -94,10 +95,11 @@ export const useWebSocketSetup = () => {
 
         const handleError = (error: any) => {
             console.error('WebSocket Error:', error);
-            dispatch(setConnectionError(error.message || 'Connection error'));
+            dispatch(setSocketError(error.message || 'Connection error'));
         };
 
-        const handleReconnecting = (data: any) => {
+        const handleReconnecting = () => {
+            console.log('WebSocket Reconnecting...');
             dispatch(setReconnecting());
             dispatch(incrementReconnectAttempts());
         };
@@ -110,24 +112,24 @@ export const useWebSocketSetup = () => {
             }));
         };
 
-        // ===== CHAT EVENTS =====
-
-        // Nhận tin nhắn mới từ server
+        // ===== CHAT HANDLERS =====
         const handleSendChat = (message: any) => {
             console.log('SEND_CHAT broadcast received:', message);
             if (message.status === 'success' && message.data) {
                 const state = (dispatch as any).getState();
                 const currentUser = state.auth.user;
+
                 const context: TransformContext = {
-                    conversations: state.chat.conversations.map((c: any) => ({
-                        id: c.id,
-                        name: c.name
+                    conversations: state.chat.conversations.allIds.map((id: string) => ({
+                        id,
+                        name: state.chat.conversations.byId[id].name
                     })),
-                    users: state.chat.userList.map((u: any) => ({
-                        id: u.id || u.username,
-                        username: u.username
+                    users: state.chat.users.allIds.map((id: string) => ({
+                        id,
+                        username: state.chat.users.byId[id].username
                     }))
                 };
+
                 const rawMessage: RawServerMessage = {
                     id: message.data.id || Date.now(),
                     mes: message.data.mes || message.data.content,
@@ -140,116 +142,46 @@ export const useWebSocketSetup = () => {
                 };
 
                 const transformedMessage = transformServerMessage(rawMessage, context);
-
-                const isSentByMe = currentUser &&
-                    transformedMessage.sender.username === currentUser.username;
+                const isSentByMe = currentUser && transformedMessage.sender.username === currentUser.username;
 
                 if (isSentByMe) {
-                    console.log('%c[SEND_CHAT] Own message - Finding temp to replace',
-                        'background: #f39c12; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold'
-                    );
-
-                    // TÌM temp message matching
-                    const tempMessages = state.chat.messages.filter(
-                        (m: Message) =>
+                    // Find and replace temp message
+                    const tempMessages = state.chat.messages.allIds
+                        .map((id: string) => state.chat.messages.byId[id])
+                        .filter((m: Message) =>
                             m.id.startsWith('temp_') &&
                             m.content === transformedMessage.content &&
                             m.receiver.id === transformedMessage.receiver.id &&
-                            m.status !== 'failed'  // Chỉ replace message đang pending/sending
-                    );
+                            m.status !== 'failed'
+                        );
 
                     if (tempMessages.length > 0) {
                         const tempMessage = tempMessages[0];
-
-                        console.log('%c[SEND_CHAT] Replacing temp message',
-                            'background: #8e44ad; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold',
-                            {
-                                tempId: tempMessage.id,
-                                serverId: transformedMessage.id,
-                                content: transformedMessage.content
-                            }
-                        );
-
                         dispatch(removeMessage(tempMessage.id));
-
-                        // DD server message với ID thật
-                        dispatch(addMessage({
-                            ...transformedMessage,
-                            status: 'sent'  // Server confirmed
-                        }));
-
-                        // Update conversation
-                        updateConversationWithMessage(dispatch, transformedMessage, state.chat.activeConversationId);
-
+                        dispatch(addMessage({ ...transformedMessage, status: 'sent' }));
+                        updateConversationWithMessage(dispatch, transformedMessage, activeConversationId);
                         return;
-                    } else {
-                        console.log('%c[SEND_CHAT] Temp message not found, adding server message',
-                            'background: #e67e22; color: white; padding: 2px 8px; border-radius: 3px;'
-                        );
                     }
                 }
 
-                // Nếu là tin của NGƯỜI KHÁC → ADD bình thường
-                console.log('%c[SEND_CHAT] Message from other user',
-                    'background: #16a085; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold',
-                    {
-                        from: transformedMessage.sender.username,
-                        content: transformedMessage.content
-                    }
-                );
-
+                // Message from other user
                 dispatch(addMessage(transformedMessage));
+                updateConversationWithMessage(dispatch, transformedMessage, activeConversationId);
 
-                updateConversationWithMessage(dispatch, transformedMessage, state.chat.activeConversationId);
-
+                // Add sender to users if not exists
                 dispatch(addUser({
                     id: transformedMessage.sender.username,
                     username: transformedMessage.sender.username,
                     displayName: transformedMessage.sender.displayName || transformedMessage.sender.username,
                     avatar: transformedMessage.sender.avatar,
+                    email: '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                     isOnline: true,
-                    type: 'user'
                 }));
             }
         };
 
-        // Helper function để update conversation
-        function updateConversationWithMessage(
-            dispatch: any,
-            message: Message,
-            activeConversationId: string | null
-        ) {
-            const sender = message.sender.username;
-            const receiver = message.receiver.id;
-
-            // Update conversation của sender
-            dispatch(updateConversation({
-                id: sender,
-                updates: {
-                    lastMessage: message,
-                    updatedAt: message.timestamp
-                }
-            }));
-
-            // Update conversation của receiver
-            dispatch(updateConversation({
-                id: receiver,
-                updates: {
-                    lastMessage: message,
-                    updatedAt: message.timestamp
-                }
-            }));
-
-            // Increment unread count nếu không phải active conversation
-            if (sender !== activeConversationId) {
-                dispatch(incrementUnreadCount(sender));
-            }
-            if (receiver !== activeConversationId) {
-                dispatch(incrementUnreadCount(receiver));
-            }
-        }
-
-        // User join/leave room events
         const handleJoinRoom = (data: any) => {
             console.log('User joined room:', data);
             // Handle user join notification
@@ -260,14 +192,12 @@ export const useWebSocketSetup = () => {
             // Handle user leave notification
         };
 
-        // Room created event
         const handleCreateRoom = (data: any) => {
+            console.log('Room created:', data);
             if (data.status === 'success' && data.data?.room) {
-                // Will be handled by createGroupChat.fulfilled in chatSlice
+                dispatch(addConversation(data.data.room));
             }
         };
-
-        // ===== USER EVENTS =====
 
         const handleUserOnline = (data: any) => {
             console.log('User online:', data);
@@ -307,7 +237,6 @@ export const useWebSocketSetup = () => {
 
         // ===== CLEANUP =====
         return () => {
-            // Remove all listeners
             websocketService.off('open', handleOpen);
             websocketService.off('close', handleClose);
             websocketService.off('error', handleError);
@@ -321,8 +250,6 @@ export const useWebSocketSetup = () => {
 
             websocketService.off('USER_ONLINE', handleUserOnline);
             websocketService.off('USER_OFFLINE', handleUserOffline);
-
-            websocketService.off('message');
         };
     }, [dispatch, isAuthenticated, activeConversationId]);
 };

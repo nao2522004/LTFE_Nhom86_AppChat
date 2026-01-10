@@ -82,7 +82,7 @@ export class SocketConnection {
             return this.ws;
         }
 
-        console.log('%c[WebSocket] Creating new connection...',
+        console.log('%c[WebSocket] Creating new socket...',
             'background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px;'
         );
 
