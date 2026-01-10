@@ -1,17 +1,23 @@
 import React, {useEffect, useRef, useCallback, useMemo, useState} from 'react';
 import {useAppDispatch, useAppSelector} from '../../../hooks/hooks';
 import {
-    selectActiveConversationMessages,
     selectActiveConversation,
-    selectChatError,
-    selectChatLoading,
-    selectCurrentPage,
-    selectHasMoreMessages,
+    selectActiveConversationMessages
+} from '../../../shared/types/selectors';
+
+import {
+    getPeopleMessages,
+    getRoomMessages,
     sendChatMessage,
-    getRoomChatMessages,
-    getPeopleChatMessages
-} from '../chatSlice';
-import {selectIsConnected} from '../../socket/connectionSlice';
+} from '../chatThunks';
+
+import {
+    selectMessagesError,
+    selectMessagesLoading, selectMessagesPagination
+} from '../../ui/uiSlice';
+
+import {selectIsConnected} from '../../socket/socketSlice';
+
 import ChatWindowView from '../components/ChatWindow/ChatWindowView';
 
 /**
@@ -25,10 +31,9 @@ const ChatWindow: React.FC = () => {
 
     const messages = useAppSelector(selectActiveConversationMessages);
     const activeConversation = useAppSelector(selectActiveConversation);
-    const loading = useAppSelector(selectChatLoading);
-    const error = useAppSelector(selectChatError);
-    const currentPage = useAppSelector(selectCurrentPage);
-    const hasMoreMessages = useAppSelector(selectHasMoreMessages);
+    const loading = useAppSelector(selectMessagesLoading);
+    const error = useAppSelector(selectMessagesError);
+    const { currentPage, hasMore } = useAppSelector(selectMessagesPagination);
     const isConnected = useAppSelector(selectIsConnected);
     const currentUser = useAppSelector((state) => state.auth.user);
     const [sendError, setSendError] = useState<string | null>(null);
@@ -55,7 +60,6 @@ const ChatWindow: React.FC = () => {
                 to: activeConversation.name,
                 mes: text
             })).unwrap();
-
         } catch (error: any) {
             console.error('Failed to send message:', error);
             const errorMsg = error.message?.toLowerCase() || '';
@@ -74,22 +78,22 @@ const ChatWindow: React.FC = () => {
     }, [dispatch, activeConversation, isConnected]);
 
     const handleLoadMore = useCallback(async () => {
-        if (!activeConversation || !hasMoreMessages || loading) return;
+        if (!activeConversation || !hasMore || loading) return;
 
         const nextPage = currentPage + 1;
 
         if (activeConversation.type === 'room') {
-            await dispatch(getRoomChatMessages({
+            await dispatch(getRoomMessages({
                 name: activeConversation.name,
                 page: nextPage
             }));
         } else {
-            await dispatch(getPeopleChatMessages({
+            await dispatch(getPeopleMessages({
                 name: activeConversation.name,
                 page: nextPage
             }));
         }
-    }, [dispatch, activeConversation, hasMoreMessages, loading, currentPage]);
+    }, [dispatch, activeConversation, hasMore, loading, currentPage]);
 
     const handleClearSendError = useCallback(() => {
         setSendError(null);
@@ -107,7 +111,7 @@ const ChatWindow: React.FC = () => {
             error={error}
             sendError={sendError}
             isConnected={isConnected}
-            hasMoreMessages={hasMoreMessages}
+            hasMoreMessages={hasMore}
 
             // Handlers
             onSendMessage={handleSendMessage}

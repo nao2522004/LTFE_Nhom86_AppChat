@@ -1,10 +1,10 @@
 import React from 'react';
 import { useAppSelector } from '../../hooks/hooks';
 import styles from './SocketIndicator.module.css';
-import { selectConnectionStatus } from '../../features/socket/connectionSlice';
+import { selectSocketStatus } from '../../features/socket/socketSlice';
 
 const SocketIndicator: React.FC = () => {
-    const connectionStatus = useAppSelector(selectConnectionStatus);
+    const connectionStatus = useAppSelector(selectSocketStatus);
     const isConnected = connectionStatus === 'connected';
 
     return (

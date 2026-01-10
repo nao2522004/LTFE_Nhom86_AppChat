@@ -1,16 +1,16 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import { useAppSelector } from '../../../hooks/hooks';
 import {
-    selectConnectionStatus,
+    selectSocketStatus,
     selectReconnectAttempts,
     selectMaxReconnectAttempts
-} from '../connectionSlice';
+} from '../socketSlice';
 import styles from './ConnectionStatusBar.module.css'
 
 const ConnectionStatusBar: React.FC = () => {
     const [expanded, setExpanded] = useState(false);
 
-    const status = useAppSelector(selectConnectionStatus);
+    const status = useAppSelector(selectSocketStatus);
     const attempts = useAppSelector(selectReconnectAttempts);
     const maxAttempts = useAppSelector(selectMaxReconnectAttempts);
 

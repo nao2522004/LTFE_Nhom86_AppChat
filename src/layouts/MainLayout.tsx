@@ -4,11 +4,11 @@ import styles from "./MainLayout.module.css";
 import Sidebar from "../components/Sidebar";
 import ConnectionStatusBar from "../features/socket/components/ConnectionStatusBar";
 import {useAppSelector} from "../hooks/hooks";
-import {selectConnectionStatus} from "../features/socket/connectionSlice";
+import {selectSocketStatus} from "../features/socket/socketSlice";
 import SocketStatusIndicator from "../features/socket/components/SocketStatusIndicator";
 
 const MainLayout: React.FC = () => {
-    const connectionStatus = useAppSelector(selectConnectionStatus);
+    const connectionStatus = useAppSelector(selectSocketStatus);
 
     // Delay hiển thị indicator
     const [showIndicator, setShowIndicator] = useState(false);

@@ -3,7 +3,7 @@ import AppRoutes from './routes';
 import {useAppDispatch} from './hooks/hooks';
 import {reLogin} from './features/auth/authSlice';
 import {useWebSocketSetup} from './hooks/useWebSocketSetup';
-import {setConnecting} from "./features/socket/connectionSlice";
+import {setConnecting} from "./features/socket/socketSlice";
 
 function App() {
     const dispatch = useAppDispatch();
