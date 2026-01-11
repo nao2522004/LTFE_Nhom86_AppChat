@@ -137,15 +137,35 @@ const ChatWindowView: React.FC<ChatWindowViewProps> = ({
                         const adjustedTime = (() => {
                             // Parse timestamp
                             const date = new Date(msg.timestamp);
+                            const today = new Date();
+                            const yesterday = new Date(today);
+                            yesterday.setDate(yesterday.getDate() - 1);
 
-                            // Format với Vietnam timezone
-                            return date.toLocaleTimeString('vi-VN', {
+                            const isToday = date.toDateString() === today.toDateString();
+                            const isYesterday = date.toDateString() === yesterday.toDateString();
+
+                            const timeString = date.toLocaleTimeString('vi-VN', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: false,
-                                timeZone: 'Asia/Ho_Chi_Minh'  // ← Force VN timezone
+                                timeZone: 'Asia/Ho_Chi_Minh'
                             });
+
+                            if (isToday) {
+                                return `${timeString} Hôm nay`;
+                            } else if (isYesterday) {
+                                return `${timeString} Hôm qua`;
+                            } else {
+                                const dateString = date.toLocaleDateString('vi-VN', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    timeZone: 'Asia/Ho_Chi_Minh'
+                                });
+                                return `${timeString} ${dateString} `;
+                            }
                         })();
+
                         return (
                             <MessageBubble
                                 key={msg.id}
