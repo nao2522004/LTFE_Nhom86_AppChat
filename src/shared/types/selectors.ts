@@ -62,15 +62,32 @@ export const selectActiveConversationMessages = createSelector(
     ],
     (activeId, allIds, messagesById) => {
         if (!activeId) return [];
-
-        return allIds
-            .map(id => messagesById[id])
+        const messages = allIds
+            .map(id => {
+                const msg = messagesById[id];
+                if (!msg) {
+                    console.warn('Message not found:', id);
+                }
+                return msg;
+            })
             .filter(msg => {
+                if (!msg) return false;
+
                 const receiverId = msg.receiver.id || msg.receiver.name;
                 const senderId = msg.sender.id || msg.sender.username;
                 return receiverId === activeId || senderId === activeId;
             })
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+            .map(msg => {
+                const dateObj = new Date(msg.timestamp.replace(' ', 'T') + 'Z');
+                return {
+                    ...msg,
+                    dateObject: dateObj,
+                    displayTime: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    displayDate: dateObj.toLocaleDateString()
+                };
+            })
+            .sort((a, b) => a.dateObject.getTime() - b.dateObject.getTime());
+        return messages;
     }
 );
 
