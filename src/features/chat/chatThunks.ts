@@ -20,6 +20,7 @@ import {
 } from '../ui/uiSlice';
 import { RootState } from '../../app/store';
 import { Message, RawServerMessage, transformServerMessage, TransformContext } from '../../shared/types/chat';
+import { encodeEmoji, decodeEmoji } from '../../shared/utils/emojiUtils';
 
 // ===== SEND MESSAGE =====
 export const sendChatMessage = createAsyncThunk(
@@ -35,6 +36,9 @@ export const sendChatMessage = createAsyncThunk(
             if (!currentUser) {
                 throw new Error('User not authenticated');
             }
+
+            // Encode emoji
+            const encodedMessage = encodeEmoji(mes);
 
             // Tạo temporary message
             const tempMessage: Message = {
@@ -64,7 +68,7 @@ export const sendChatMessage = createAsyncThunk(
             dispatch(addSendingMessage(tempMessage.id));
 
             // Send to server
-            await websocketService.sendChat({ type, to, mes });
+            await websocketService.sendChat({ type, to, mes: encodedMessage });
 
             // Update status to sent
             dispatch(updateMessage({ id: tempMessage.id, updates: { status: 'sent' } }));
@@ -101,9 +105,21 @@ export const getRoomMessages = createAsyncThunk(
                 }))
             };
 
-            const messages = (response.messages || []).map((raw: RawServerMessage) =>
-                transformServerMessage(raw, context)
-            );
+            const messages = (response.messages || []).map((raw: RawServerMessage) => {
+                const message = transformServerMessage(raw, context);
+
+                // Decode emoji
+                return {
+                    ...message,
+                    content: decodeEmoji(message.content),
+                    contentData: (message.contentData?.type === 'text')
+                        ? {
+                            ...message.contentData,
+                            text: decodeEmoji(message.contentData.text)
+                        }
+                        : message.contentData
+                };
+            });
 
             if (page === 1) {
                 dispatch(setMessages(messages));
@@ -148,9 +164,21 @@ export const getPeopleMessages = createAsyncThunk(
                 }))
             };
 
-            const messages = (response.messages || []).map((raw: RawServerMessage) =>
-                transformServerMessage(raw, context)
-            );
+            const messages = (response.messages || []).map((raw: RawServerMessage) => {
+                const message = transformServerMessage(raw, context)
+
+                // Decode emoji
+                return {
+                    ...message,
+                    content: decodeEmoji(message.content),
+                    contentData: (message.contentData?.type === 'text')
+                        ? {
+                            ...message.contentData,
+                            text: decodeEmoji(message.contentData.text)
+                        }
+                        : message.contentData
+                };
+            });
 
             if (page === 1) {
                 dispatch(setMessages(messages));

@@ -106,5 +106,6 @@ export class AuthService extends BaseService{
         // remove token
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("epr_suggested");
     }
 }
