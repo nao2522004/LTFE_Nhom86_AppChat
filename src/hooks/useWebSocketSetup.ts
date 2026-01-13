@@ -19,6 +19,7 @@ import {getUserList} from '../features/chat/chatThunks';
 import websocketService from "../services/websocket/MainService";
 import {Message, RawServerMessage, TransformContext, transformServerMessage} from "../shared/types/chat";
 import store from "../app/store";
+import { decodeEmoji } from '../shared/utils/emojiUtils';
 
 /**
  * Hook quản lý WebSocket lifecycle và broadcast responses
@@ -148,7 +149,20 @@ export const useWebSocketSetup = () => {
                     type: message.data.type || 0
                 };
 
-                const transformedMessage = transformServerMessage(rawMessage, context);
+                let transformedMessage = transformServerMessage(rawMessage, context);
+                
+                // DECODE emoji
+                transformedMessage = {
+                    ...transformedMessage,
+                    content: decodeEmoji(transformedMessage.content),
+                    contentData: (transformedMessage.contentData?.type === 'text')
+                        ? {
+                            ...transformedMessage.contentData,
+                            text: decodeEmoji(transformedMessage.contentData.text)
+                        }
+                        : transformedMessage.contentData
+                };
+                
                 const isSentByMe = currentUser && transformedMessage.sender.username === currentUser.username;
 
                 if (isSentByMe) {
