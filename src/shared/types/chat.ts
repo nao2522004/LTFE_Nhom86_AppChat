@@ -363,3 +363,55 @@ export function safeTransformMessage(raw: any, context?: TransformContext): Mess
     }
     return transformServerMessage(raw, context);
 }
+
+export interface RawServerRoomMessage {
+    id: number;
+    name: string;
+    type: number;
+    to: string;
+    mes: string;
+    createAt: string;
+}
+
+export function transformServerRoomMessage(
+    raw: RawServerRoomMessage,
+    context?: TransformContext
+): Message {
+    const senderId = raw.name;
+
+    return {
+        id: String(raw.id),
+        content: raw.mes,
+        contentData: {
+            type: 'text',
+            text: raw.mes
+        },
+        sender: {
+            id: senderId,
+            username: senderId
+        },
+        receiver: {
+            id: raw.to,
+            name: raw.to,
+            type: 'room'
+        },
+        timestamp: raw.createAt,
+        status: 'sent',
+        type: 'text',
+        reactions: []
+    };
+}
+
+export interface RoomUser {
+    id: number;
+    name: string;
+}
+
+export interface JoinRoomDetail {
+    id: number;
+    name: string;
+    own: string;
+    createTime: string;
+    userList: RoomUser[];
+    chatData: RawServerRoomMessage[]; // Sử dụng interface bạn đã có ở trên
+}

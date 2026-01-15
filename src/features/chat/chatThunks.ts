@@ -19,8 +19,9 @@ import {
     removeSendingMessage
 } from '../ui/uiSlice';
 import { RootState } from '../../app/store';
-import { Message, RawServerMessage, transformServerMessage, TransformContext } from '../../shared/types/chat';
+import { Message, RawServerMessage, transformServerMessage, TransformContext, transformServerRoomMessage } from '../../shared/types/chat';
 import { encodeEmoji, decodeEmoji } from '../../shared/utils/emojiUtils';
+import { RawServerRoomMessage } from '../../shared/types/chat';
 
 // ===== SEND MESSAGE =====
 export const sendChatMessage = createAsyncThunk(
@@ -92,21 +93,9 @@ export const getRoomMessages = createAsyncThunk(
             dispatch(setMessagesLoading(true));
 
             const response = await websocketService.getRoomChatMessages({ name, page });
-            const state = getState() as RootState;
-
-            const context: TransformContext = {
-                conversations: state.chat.conversations.allIds.map(id => ({
-                    id,
-                    name: state.chat.conversations.byId[id].name
-                })),
-                users: state.chat.users.allIds.map(id => ({
-                    id,
-                    username: state.chat.users.byId[id].username
-                }))
-            };
-
-            const messages = (response.messages || []).map((raw: RawServerMessage) => {
-                const message = transformServerMessage(raw, context);
+            const rawMessage = response.data?.chatData || [];
+            const messages = rawMessage.map((raw: RawServerRoomMessage) => {
+                const message = transformServerRoomMessage(raw);
 
                 // Decode emoji
                 return {
@@ -124,7 +113,7 @@ export const getRoomMessages = createAsyncThunk(
             if (page === 1) {
                 dispatch(setMessages(messages));
             } else {
-                messages.forEach(msg => dispatch(addMessage(msg)));
+                messages.forEach((msg : Message)=> dispatch(addMessage(msg)));
             }
 
             dispatch(setMessagesPage(page));
