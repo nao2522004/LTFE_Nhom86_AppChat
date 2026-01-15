@@ -19,9 +19,7 @@ export interface JoinRoomData {
     name: string;
 }
 
-interface GetMessagesResponse {
-    messages: any[];
-}
+
 
 interface CreateRoomResponse {
     room: any;
@@ -32,17 +30,13 @@ export class ChatService extends BaseService {
         return this.send('SEND_CHAT', data);
     }
 
-    async getRoomChatMessages(data: GetMessagesData): Promise<GetMessagesResponse> {
+    async getRoomChatMessages(data: GetMessagesData): Promise<any> {
         const response = await this.sendAndWaitForResponse<any>(
             'GET_ROOM_CHAT_MES',
             data
         );
 
-        const rawData = response.data || [];
-        const messages = Array.isArray(rawData)
-            ? rawData
-            : Object.values(rawData).filter(item => typeof item === 'object');
-        return { messages };
+        return { data: response.data };
     }
 
     async getPeopleChatMessages(data: GetMessagesData): Promise<any> {
