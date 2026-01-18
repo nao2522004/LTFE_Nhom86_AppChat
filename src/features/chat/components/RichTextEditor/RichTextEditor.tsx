@@ -18,6 +18,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  
+  const [activeFormats, setActiveFormats] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeThrough: false
+  });
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
@@ -25,12 +32,30 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [value]);
 
+  const updateActiveFormats = () => {
+    setActiveFormats({
+      bold: document.queryCommandState('bold'),
+      italic: document.queryCommandState('italic'),
+      underline: document.queryCommandState('underline'),
+      strikeThrough: document.queryCommandState('strikeThrough')
+    });
+  };
+
   const handleInput = () => {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML;
       const text = editorRef.current.innerText;
       onChange(html, text);
+      updateActiveFormats(); 
     }
+  };
+
+  const handleEditorClick = () => {
+    updateActiveFormats();
+  };
+
+  const handleEditorKeyUp = () => {
+    updateActiveFormats();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -49,16 +74,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     document.execCommand(command, false, undefined);
     editorRef.current?.focus();
     handleInput();
+    updateActiveFormats(); 
   };
 
   const showPlaceholder = !isFocused && (!editorRef.current?.textContent?.trim());
 
   return (
     <>
+      {/* Toolbar */}
       <div className={styles.toolbar}>
         <button
           type="button"
-          className={styles.toolbarBtn}
+          className={`${styles.toolbarBtn} ${activeFormats.bold ? styles.active : ''}`}  
           onClick={() => applyFormat('bold')}
           disabled={disabled}
           title="Bold (Ctrl+B)"
@@ -67,7 +94,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </button>
         <button
           type="button"
-          className={styles.toolbarBtn}
+          className={`${styles.toolbarBtn} ${activeFormats.italic ? styles.active : ''}`}  
           onClick={() => applyFormat('italic')}
           disabled={disabled}
           title="Italic (Ctrl+I)"
@@ -76,7 +103,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </button>
         <button
           type="button"
-          className={styles.toolbarBtn}
+          className={`${styles.toolbarBtn} ${activeFormats.underline ? styles.active : ''}`}  
           onClick={() => applyFormat('underline')}
           disabled={disabled}
           title="Underline (Ctrl+U)"
@@ -85,7 +112,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </button>
         <button
           type="button"
-          className={styles.toolbarBtn}
+          className={`${styles.toolbarBtn} ${activeFormats.strikeThrough ? styles.active : ''}`}  
           onClick={() => applyFormat('strikeThrough')}
           disabled={disabled}
           title="Strikethrough"
@@ -94,6 +121,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </button>
       </div>
 
+      {/* Editor */}
       <div className={styles.editorWrapper}>
         <div
           ref={editorRef}
@@ -101,6 +129,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           className={`${styles.editor} ${disabled ? styles.disabled : ''}`}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
+          onKeyUp={handleEditorKeyUp}  
+          onClick={handleEditorClick}   
           onPaste={handlePaste}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
