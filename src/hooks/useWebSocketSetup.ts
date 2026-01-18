@@ -27,18 +27,24 @@ import { decodeEmoji } from '../shared/utils/emojiUtils';
 export const useWebSocketSetup = () => {
     const dispatch = useAppDispatch();
     const {isAuthenticated} = useAppSelector((state) => state.auth);
-    const activeConversationId = useAppSelector((state) => state.ui.activeConversationId);
+
+    const userListLoadedRef = useRef(false);
+    const setupCompleteRef = useRef(false);
 
     useEffect(() => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated) {
+            setupCompleteRef.current = false;
+            userListLoadedRef.current = false;
+            return;
+        }
 
-        let userListLoaded = false;
+        if (setupCompleteRef.current) return;
+        setupCompleteRef.current = true;
 
         // ===== HELPER FUNCTION =====
         function updateConversationWithMessage(
             dispatch: any,
             message: Message,
-            activeConversationId: string | null
         ) {
             const sender = message.sender.username;
             const receiver = message.receiver.id;
@@ -60,11 +66,12 @@ export const useWebSocketSetup = () => {
                 }
             }));
 
+            const currentActiveId = store.getState().ui.activeConversationId;
             // Increment unread count if not active
-            if (sender !== activeConversationId) {
+            if (sender !== currentActiveId) {
                 dispatch(incrementUnreadCount(sender));
             }
-            if (receiver !== activeConversationId) {
+            if (receiver !== currentActiveId) {
                 dispatch(incrementUnreadCount(receiver));
             }
         }
@@ -75,8 +82,8 @@ export const useWebSocketSetup = () => {
             dispatch(resetReconnectAttempts());
 
             // Load user list ONLY ONCE when connected
-            if (!userListLoaded) {
-                userListLoaded = true;
+            if (!userListLoadedRef.current) {
+                userListLoadedRef.current = true;
                 dispatch(getUserList());
             }
         };
@@ -125,7 +132,6 @@ export const useWebSocketSetup = () => {
 
                 const state = store.getState();
                 const currentUser = state.auth.user;
-                const activeId = state.ui.activeConversationId;
 
                 const context: TransformContext = {
                     conversations: state.chat.conversations.allIds.map((id: string) => ({
@@ -180,14 +186,14 @@ export const useWebSocketSetup = () => {
                         const tempMessage = tempMessages[0];
                         dispatch(removeMessage(tempMessage.id));
                         dispatch(addMessage({...transformedMessage, status: 'sent'}));
-                        updateConversationWithMessage(dispatch, transformedMessage, activeConversationId);
+                        updateConversationWithMessage(dispatch, transformedMessage);
                         return;
                     }
                 }
 
                 // Message from other user
                 dispatch(addMessage(transformedMessage));
-                updateConversationWithMessage(dispatch, transformedMessage, activeConversationId);
+                updateConversationWithMessage(dispatch, transformedMessage);
 
                 // Add sender to users if not exists
                 if (!isSentByMe) {
@@ -200,7 +206,6 @@ export const useWebSocketSetup = () => {
                             id: transformedMessage.sender.username,
                             username: transformedMessage.sender.username,
                             displayName: transformedMessage.sender.username,
-                            avatar: transformedMessage.sender.avatar,
                             email: '',
                             createdAt: new Date().toISOString(),
                             updatedAt: new Date().toISOString(),
@@ -282,7 +287,7 @@ export const useWebSocketSetup = () => {
             websocketService.off('USER_ONLINE', handleUserOnline);
             websocketService.off('USER_OFFLINE', handleUserOffline);
         };
-    }, [dispatch, isAuthenticated, activeConversationId]);
+    }, [dispatch, isAuthenticated]);
 };
 
 export default useWebSocketSetup;

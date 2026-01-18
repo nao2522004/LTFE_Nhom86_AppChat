@@ -1,6 +1,7 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useAppDispatch, useAppSelector} from '../../../hooks/hooks';
 import {
+    addConversation,
     addUser, selectAllConversations, selectAllUsers
 } from '../chatSlice';
 
@@ -57,6 +58,19 @@ const ConversationSidebar: React.FC = () => {
     const handleCreateRoom = async (roomName: string) => {
         try {
             await dispatch(createRoom(roomName)).unwrap();
+            const roomExists = conversations.find(c => c.name === roomName);
+            if (!roomExists) {
+                const newConversation = {
+                    id: roomName,
+                    name: roomName,
+                    type: 'room' as const,
+                    participants: [],
+                    unreadCount: 0,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                dispatch(addConversation(newConversation));
+            }
             await dispatch(joinRoom(roomName)).unwrap();
             // Set active và load messages
             dispatch(setActiveConversation(roomName));
@@ -70,6 +84,19 @@ const ConversationSidebar: React.FC = () => {
     const handleJoinRoom = async (groupName: string) => {
         try {
             await dispatch(joinRoom(groupName)).unwrap();
+            const roomExists = conversations.find(c => c.name === groupName);
+            if (!roomExists) {
+                const newConversation = {
+                    id: groupName,
+                    name: groupName,
+                    type: 'room' as const,
+                    participants: [],
+                    unreadCount: 0,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                dispatch(addConversation(newConversation));
+            }
             // Set active và load messages
             dispatch(setActiveConversation(groupName));
             await dispatch(getRoomMessages({name: groupName, page: 1}));
