@@ -131,71 +131,55 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
 
     return (
         <>
-            {/* {uploadState.isUploading && (
-                <UploadProgress 
-                    progress={uploadState.progress} 
-                    fileName={uploadState.fileName}
-                />
-            )} */}
-
             <div className={styles.chatFooter}>
                 <div className={styles.inputWrapper}>
-                    <button
-                        className={styles.iconBtn}
-                        disabled={disabled}
-                        title="Attach file"
-                    >
-                        <i className="fas fa-paperclip"></i>
-                    </button>
-
-                    {/* <input
-                        ref={inputRef}
-                        type="text"
-                        placeholder={disabled ? "Connecting..." : "Type your message here..."}
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        onSelect={handleInputSelect}
-                        onKeyDown={handleKeyPress}
-                        disabled={disabled || uploadState.isUploading}
-                        className={styles.messageInput}
-                    /> */}
-
-                    <RichTextEditor
-                        value={htmlContent}
-                        onChange={handleEditorChange}
-                        onKeyDown={handleKeyPress}
-                        placeholder={disabled ? "Connecting..." : "Type your message here..."}
-                        disabled={disabled || uploadState.isUploading}
-                    />
-
-                    {/* Emoji picker */}
-                    <div style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
                         <button
-                            className={`${styles.iconBtn} ${showEmojiPicker ? styles.active : ''}`}
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            disabled={disabled || uploadState.isUploading}
+                            className={styles.iconBtn}
+                            disabled={disabled}
+                            title="Attach file"
                         >
-                            <i className="far fa-smile"></i>
+                            <i className="fas fa-paperclip"></i>
                         </button>
 
-                        {showEmojiPicker && (
-                            <EmojiPicker
-                                onEmojiSelect={handleEmojiSelect}
-                                disabled={disabled}
-                                onClose={() => setShowEmojiPicker(false)}
-                            />
-                        )}
-                    </div>
-
-                    <div className={styles.imagePickerWrapper}>
-                        <ImagePicker
-                            ref={imagePickerRef} 
-                            onImagesSelected={handleImagesSelected}
-                            maxImages={5}
+                        <RichTextEditor
+                            value={htmlContent}
+                            onChange={handleEditorChange}
+                            onKeyDown={handleKeyPress}
+                            placeholder={disabled ? "Connecting..." : "Type your message here..."}
                             disabled={disabled || uploadState.isUploading}
                         />
+
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                className={`${styles.iconBtn} ${showEmojiPicker ? styles.active : ''}`}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                disabled={disabled || uploadState.isUploading}
+                                title="Emoji"
+                            >
+                                <i className="far fa-smile"></i>
+                            </button>
+
+                            {showEmojiPicker && (
+                                <EmojiPicker
+                                    onEmojiSelect={handleEmojiSelect}
+                                    disabled={disabled}
+                                    onClose={() => setShowEmojiPicker(false)}
+                                />
+                            )}
+                        </div>
+
+                        <div className={styles.imagePickerWrapper}>
+                            <ImagePicker
+                                ref={imagePickerRef}
+                                onImagesSelected={handleImagesSelected}
+                                maxImages={5}
+                                disabled={disabled || uploadState.isUploading}
+                            />
+                        </div>
                     </div>
+
                 </div>
 
                 <button

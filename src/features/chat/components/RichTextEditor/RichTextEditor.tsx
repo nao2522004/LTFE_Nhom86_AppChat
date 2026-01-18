@@ -54,7 +54,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const showPlaceholder = !isFocused && (!editorRef.current?.textContent?.trim());
 
   return (
-    <div className={styles.richTextContainer}>
+    <>
       <div className={styles.toolbar}>
         <button
           type="button"
@@ -110,7 +110,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <div className={styles.placeholder}>{placeholder}</div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
