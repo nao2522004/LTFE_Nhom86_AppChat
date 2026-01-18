@@ -3,6 +3,8 @@ import styles from "./ChatWindow.module.css";
 import {MessageStatus} from "../../../../shared/types/chat";
 import { parseMessage } from "../../../../shared/utils/messageParser"; 
 import ImageMessage from "../ChatInputWithImage/ImageMessage";
+import DOMPurify from 'dompurify';  
+
 
 interface MessageProps {
     text: string;
@@ -31,6 +33,13 @@ const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => 
             {status === 'failed' && <span title="Gửi thất bại" style={{ color: '#ff6b6b' }}>❌</span>}
         </span>
     );
+    
+    const sanitizeHTML = (html: string) => {
+        return DOMPurify.sanitize(html, {
+            ALLOWED_TAGS: ['b', 'i', 'u', 's', 'strong', 'em', 'strike', 'br'],
+            ALLOWED_ATTR: []
+        });
+    };
 
     return (
         <div className={`${styles.message} ${isSent ? styles.sent : styles.received}`}>
@@ -41,7 +50,11 @@ const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => 
                         wordBreak: 'break-word',
                         lineHeight: '1.4'
                     }}>
-                        {parsedContent.text}
+                        <span 
+                            dangerouslySetInnerHTML={{ 
+                                __html: sanitizeHTML(parsedContent.text) 
+                            }}
+                        />
                         {!hasImages && statusElement}
                     </div>
                 )}
