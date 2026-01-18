@@ -24,6 +24,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
+  position: relative; 
 }
 
 .toolbarBtn:hover:not(:disabled) {
@@ -39,6 +40,42 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.toolbarBtn.active {
+  background: rgba(93, 142, 133, 0.2); 
+  color: #5d8e85; 
+  font-weight: 600; 
+}
+
+.toolbarBtn.active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid #5d8e85;
+  border-radius: 6px;
+  opacity: 0.5;
+}
+
+.toolbarBtn.active {
+  animation: activeToggle 0.2s ease;
+}
+
+@keyframes activeToggle {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.toolbarBtn.active:hover:not(:disabled) {
+  background: rgba(93, 142, 133, 0.3); 
+}
+
 
 .editorWrapper {
   position: relative;
