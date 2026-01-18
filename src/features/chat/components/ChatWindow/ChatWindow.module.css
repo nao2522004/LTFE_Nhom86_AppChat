@@ -359,7 +359,7 @@
     gap: 15px;
 }
 
-.inputWrapper {
+/* .inputWrapper {
     position: relative;
     flex: 1;
     background-color: var(--bg-chat);
@@ -368,6 +368,17 @@
     display: flex;
     align-items: center;
     gap: 12px;
+} */
+
+.inputWrapper {
+    position: relative;
+    flex: 1;
+    background-color: var(--bg-chat);
+    border-radius: 30px;
+    padding: 8px 15px;  
+    display: flex;
+    align-items: flex-start;  
+    gap: 8px; 
 }
 
 .iconBtn {

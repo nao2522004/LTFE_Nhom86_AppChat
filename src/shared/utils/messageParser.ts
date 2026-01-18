@@ -60,3 +60,13 @@ export const isValidImageUrl = (url: string): boolean => {
     return false;
   }
 };
+
+export const stripHTML = (html: string): string => {
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
+export const hasHTMLTags = (text: string): boolean => {
+  return /<\/?[a-z][\s\S]*>/i.test(text);
+};
