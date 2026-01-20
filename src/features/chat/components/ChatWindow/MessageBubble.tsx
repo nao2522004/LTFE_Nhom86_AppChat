@@ -3,8 +3,8 @@ import styles from "./ChatWindow.module.css";
 import {MessageStatus} from "../../../../shared/types/chat";
 import { parseMessage } from "../../../../shared/utils/messageParser"; 
 import ImageMessage from "../ChatInputWithImage/ImageMessage";
-import DOMPurify from 'dompurify';  
-
+import VideoMessage from "../ChatInputWithImage/VideoMessage";
+import DOMPurify from 'dompurify';
 
 interface MessageProps {
     text: string;
@@ -16,6 +16,9 @@ interface MessageProps {
 const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => {
     const parsedContent = parseMessage(text);
     const hasImages = parsedContent.imageUrls && parsedContent.imageUrls.length > 0;
+    const hasVideos = parsedContent.videoUrls && parsedContent.videoUrls.length > 0;
+    const hasMedia = hasImages || hasVideos;
+    
     const statusElement = isSent && status && (
         <span 
             className="message-status-indicator"
@@ -44,9 +47,10 @@ const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => 
     return (
         <div className={`${styles.message} ${isSent ? styles.sent : styles.received}`}>
             <div className={styles.msgBubble}>
+                
                 {parsedContent.text && (
                     <div style={{ 
-                        marginBottom: hasImages ? '8px' : '0',
+                        marginBottom: hasMedia ? '8px' : '0',
                         wordBreak: 'break-word',
                         lineHeight: '1.4'
                     }}>
@@ -55,23 +59,32 @@ const MessageBubble: React.FC<MessageProps> = ({text, time, isSent, status}) => 
                                 __html: sanitizeHTML(parsedContent.text) 
                             }}
                         />
-                        {!hasImages && statusElement}
+                        {!hasMedia && statusElement}
                     </div>
                 )}
 
+               
                 {hasImages && (
-                    <div className="message-images-container">
+                    <div className="message-images-container" style={{ marginBottom: hasVideos ? '8px' : '0' }}>
                         <ImageMessage imageUrls={parsedContent.imageUrls!} />
-                        
-                        {isSent && (
-                            <div style={{ 
-                                textAlign: 'right', 
-                                marginTop: '4px',
-                                lineHeight: '1' 
-                            }}>
-                                {statusElement}
-                            </div>
-                        )}
+                    </div>
+                )}
+
+               
+                {hasVideos && (
+                    <div className="message-videos-container">
+                        <VideoMessage videoUrls={parsedContent.videoUrls!} />
+                    </div>
+                )}
+
+                
+                {hasMedia && isSent && (
+                    <div style={{ 
+                        textAlign: 'right', 
+                        marginTop: '4px',
+                        lineHeight: '1' 
+                    }}>
+                        {statusElement}
                     </div>
                 )}
             </div>

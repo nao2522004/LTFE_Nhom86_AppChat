@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
-import ImagePicker from '../ImagePicker/ImagePicker';
+import MediaPicker from '../MediaPicker/MediaPicker';
 import UploadProgress from '../UploadProgress/UploadProgress';
 import cloudinaryService from '../../../../services/api/cloudinaryService';
 import './ChatInput.css';
@@ -105,9 +105,9 @@ const ChatInputWithImage: React.FC<ChatInputWithImageProps> = ({
       )}
 
       <div className="chat-input-container">
-        <ImagePicker
-          onImagesSelected={handleImagesSelected}
-          maxImages={5}
+        <MediaPicker
+          onMediaSelected={handleImagesSelected}
+          maxFiles={5}
           disabled={disabled || uploadState.isUploading}
         />
 
