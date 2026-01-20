@@ -1,11 +1,10 @@
 import React, { useState, useRef } from "react";
 import styles from "./ChatWindow.module.css";
 import EmojiPicker from "../EmojiPicker/EmojiPicker";
-import ImagePicker, { ImagePickerHandle } from "../ImagePicker/ImagePicker";
+import MediaPicker, { MediaPickerHandle } from "../MediaPicker/MediaPicker";
 import UploadProgress from "../UploadProgress/UploadProgress";
 import cloudinaryService from "../../../../services/api/cloudinaryService";
-import RichTextEditor from "../RichTextEditor/RichTextEditor";  
-
+import RichTextEditor from "../RichTextEditor/RichTextEditor";
 
 interface MessageInputBarProps {
     onSendMessage: (text: string) => void;
@@ -19,89 +18,114 @@ interface UploadState {
 }
 
 const MessageInputBar: React.FC<MessageInputBarProps> = ({
-                                                             onSendMessage,
-                                                             disabled = false
-                                                         }) => {
-    const [htmlContent, setHtmlContent] = useState('');  
-    const [plainText, setPlainText] = useState('');                                                            
+    onSendMessage,
+    disabled = false
+}) => {
+    const [htmlContent, setHtmlContent] = useState('');
+    const [plainText, setPlainText] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const cursorPositionRef = useRef<number | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [selectedImages, setSelectedImages] = useState<File[]>([]);
+    const [selectedMedia, setSelectedMedia] = useState<File[]>([]);
     const [uploadState, setUploadState] = useState<UploadState>({
         isUploading: false,
         progress: 0,
         fileName: ''
     });
-    const imagePickerRef = useRef<ImagePickerHandle>(null);
+    const mediaPickerRef = useRef<MediaPickerHandle>(null);
 
-    const handleImagesSelected = (files: File[]) => {
-        setSelectedImages(files);
+    const handleMediaSelected = (files: File[]) => {
+        setSelectedMedia(files);
     };
 
-    // const handleInputSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
-    //     cursorPositionRef.current = e.currentTarget.selectionStart;
-    // };
-
     const handleSend = async () => {
-        if ((!plainText.trim() && selectedImages.length === 0) || disabled || uploadState.isUploading) {
+        if ((!plainText.trim() && selectedMedia.length === 0) || disabled || uploadState.isUploading) {
             return;
         }
 
         try {
             let messageToSend = htmlContent.trim();
 
-            // Logic upload image to Cloudinary
-            if (selectedImages.length > 0) {
+            if (selectedMedia.length > 0) {
                 setUploadState({
                     isUploading: true,
                     progress: 0,
-                    fileName: selectedImages[0].name
+                    fileName: selectedMedia[0].name
                 });
 
-                const uploadResults = await cloudinaryService.uploadMultipleImages(
-                    selectedImages,
-                    (fileIndex, progress) => {
-                        setUploadState(prev => ({
-                            ...prev,
-                            progress: Math.round((fileIndex * 100 + progress) / selectedImages.length),
-                            fileName: selectedImages[fileIndex].name
-                        }));
-                    }
-                );
+                const imageFiles = selectedMedia.filter(f => f.type.startsWith('image/'));
+                const videoFiles = selectedMedia.filter(f => f.type.startsWith('video/'));
 
-                const imageUrls = uploadResults.map(result => result.secure_url);
-                const imageMessage = imageUrls.map(url => `[IMAGE]${url}[/IMAGE]`).join('\n');
+                let allMediaUrls: string[] = [];
+
+                // Upload images
+                if (imageFiles.length > 0) {
+                    const imageResults = await cloudinaryService.uploadMultipleImages(
+                        imageFiles,
+                        (fileIndex, progress) => {
+                            const totalFiles = selectedMedia.length;
+                            const overallProgress = Math.round(
+                                ((fileIndex + imageFiles.length) * 100 + progress) / totalFiles
+                            );
+                            setUploadState(prev => ({
+                                ...prev,
+                                progress: overallProgress,
+                                fileName: imageFiles[fileIndex].name
+                            }));
+                        }
+                    );
+                    const imageUrls = imageResults.map(r => r.secure_url);
+                    const imageMessage = imageUrls.map(url => `[IMAGE]${url}[/IMAGE]`).join('\n');
+                    allMediaUrls.push(imageMessage);
+                }
+
+                // Upload videos
+                if (videoFiles.length > 0) {
+                    const videoResults = await cloudinaryService.uploadMultipleVideos(
+                        videoFiles,
+                        (fileIndex, progress) => {
+                            const totalFiles = selectedMedia.length;
+                            const offset = imageFiles.length;
+                            const overallProgress = Math.round(
+                                ((offset + fileIndex) * 100 + progress) / totalFiles
+                            );
+                            setUploadState(prev => ({
+                                ...prev,
+                                progress: overallProgress,
+                                fileName: videoFiles[fileIndex].name
+                            }));
+                        }
+                    );
+                    const videoUrls = videoResults.map(r => r.secure_url);
+                    const videoMessage = videoUrls.map(url => `[VIDEO]${url}[/VIDEO]`).join('\n');
+                    allMediaUrls.push(videoMessage);
+                }
+
+                const combinedMedia = allMediaUrls.join('\n');
 
                 if (messageToSend) {
-                    messageToSend = `${messageToSend}\n${imageMessage}`;
+                    messageToSend = `${messageToSend}\n${combinedMedia}`;
                 } else {
-                    messageToSend = imageMessage;
+                    messageToSend = combinedMedia;
                 }
             }
 
-            // Send message
             onSendMessage(messageToSend);
 
-            // Reset state
-            // setText('');
-            setHtmlContent('');      
-            setPlainText('');        
-            setSelectedImages([]);
+            setHtmlContent('');
+            setPlainText('');
+            setSelectedMedia([]);
             setShowEmojiPicker(false);
-            cursorPositionRef.current = null;
             setUploadState({
                 isUploading: false,
                 progress: 0,
                 fileName: ''
             });
 
-            if (imagePickerRef.current) {
-                imagePickerRef.current.clear();
+            if (mediaPickerRef.current) {
+                mediaPickerRef.current.clear();
             }
         } catch (error) {
-            console.error('Error sending message with images:', error);
-            alert('Có lỗi xảy ra khi tải ảnh lên. Vui lòng thử lại.');
+            console.error('Error sending message:', error);
+            alert('Có lỗi xảy ra khi tải file. Vui lòng thử lại.');
             setUploadState({
                 isUploading: false,
                 progress: 0,
@@ -122,15 +146,22 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
         setShowEmojiPicker(false);
     };
 
-     const handleEditorChange = (html: string, text: string) => {  
+    const handleEditorChange = (html: string, text: string) => {
         setHtmlContent(html);
         setPlainText(text);
     };
 
-    const isSendDisabled = disabled || uploadState.isUploading || (!plainText.trim() && selectedImages.length === 0);
+    const isSendDisabled = disabled || uploadState.isUploading || (!plainText.trim() && selectedMedia.length === 0);
 
     return (
         <>
+            {uploadState.isUploading && (
+                <UploadProgress 
+                    progress={uploadState.progress} 
+                    fileName={uploadState.fileName}
+                />
+            )}
+
             <div className={styles.chatFooter}>
                 <div className={styles.inputWrapper}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
@@ -170,25 +201,24 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({
                             )}
                         </div>
 
-                        <div className={styles.imagePickerWrapper}>
-                            <ImagePicker
-                                ref={imagePickerRef}
-                                onImagesSelected={handleImagesSelected}
-                                maxImages={5}
+                        <div className={styles.mediaPickerWrapper}>
+                            <MediaPicker
+                                ref={mediaPickerRef}
+                                onMediaSelected={handleMediaSelected}
+                                maxFiles={5}
                                 disabled={disabled || uploadState.isUploading}
                             />
                         </div>
                     </div>
-
                 </div>
 
                 <button
                     className={`${styles.sendBtn} ${isSendDisabled ? styles.disabled : ''}`}
                     onClick={handleSend}
                     disabled={isSendDisabled}
-                    title={plainText.trim() || selectedImages.length > 0 ? "Send message" : "Microphone"}
+                    title={plainText.trim() || selectedMedia.length > 0 ? "Send message" : "Microphone"}
                 >
-                    <i className={`fas ${plainText.trim() || selectedImages.length > 0 ? 'fa-paper-plane' : 'fa-microphone'}`}></i>
+                    <i className={`fas ${plainText.trim() || selectedMedia.length > 0 ? 'fa-paper-plane' : 'fa-microphone'}`}></i>
                 </button>
             </div>
         </>
